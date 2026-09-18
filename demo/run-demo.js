@@ -59,7 +59,8 @@ async function main() {
   await head('1', 'The human opens a budget');
   console.log(`  Cap     ${C.b('10 XRP')}        ${C.dim('→ PaymentChannelCreate.Amount')}`);
   console.log(`  Payee   ${C.b('the approved vendor')}  ${C.dim('→ PaymentChannelCreate.Destination')}`);
-  console.log(C.dim('  Both are written to the ledger and cannot be changed.\n'));
+  console.log(C.dim('  The payee is fixed. The cap can only be raised by the owner,\n'));
+  console.log(C.dim('  never by the agent — it holds no account key.\n'));
   const budget = await owner.grantBudget({
     payee: payee.address, capXrp: '10', agentPublicKey: agent.publicKey,
   });

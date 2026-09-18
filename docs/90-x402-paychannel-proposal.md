@@ -375,13 +375,13 @@ Both options are offered. The `accepts` array is how this is expressed — it is
       "channelId": "177AE4305EDF4D556A2D867F5D1A11473A2C6946EE2351DD433FD5DBE2605557",
       "cumulativeAmount": "3050000",
       "publicKey": "EDE165DE93DF4FDF329D9426D13137D5FDDC6C166052D630940D94A8BE3F0B8AFB",
-      "signature": "<hex signature over 434C4D00 || 177AE430… || 0000000000002E8B48>"
+      "signature": "<hex signature over 434C4D00 || 177AE430… || 00000000002E8A10>"
     }
   }
 }
 ```
 
-The signed message is the 44 bytes `434C4D00` `177AE4305EDF4D556A2D867F5D1A11473A2C6946EE2351DD433FD5DBE2605557` `00000000002E8B48`, where `0x2E8B48 = 3050000`. That is the entire authorization. It commits to a channel and a running total — nothing else.
+The signed message is the 44 bytes `434C4D00` `177AE4305EDF4D556A2D867F5D1A11473A2C6946EE2351DD433FD5DBE2605557` `00000000002E8A10`, where `0x2E8A10 = 3050000`. That is the entire authorization. It commits to a channel and a running total — nothing else.
 
 ### 3. Server → client: `PAYMENT-RESPONSE` (raw JSON, before base64)
 

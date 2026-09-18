@@ -67,7 +67,7 @@ Put the limit in the ledger, not in the agent.
 **ナレーション**
 > XRPL Leash moves the ceiling out of the application and into the ledger.
 > A budget is a payment channel. The cap and the payee are written on-chain
-> and cannot be changed.
+> The payee cannot be changed at all; the cap can only be raised by the owner.
 
 ---
 
@@ -83,7 +83,7 @@ Put the limit in the ledger, not in the agent.
 | 画面に出るもの | ナレーション |
 |---|---|
 | SETUP の4者 | The agent has no account. It holds a signing key and nothing else. |
-| 1. budget opened / `tesSUCCESS` | The human opens a budget. Cap: ten XRP. Payee: fixed. Both immutable. |
+| 1. budget opened / `tesSUCCESS` | The human opens a budget. Cap: ten XRP. Payee: fixed — and only the owner can raise the cap. |
 | 2. claim 2 XRP / `tesSUCCESS` | The agent pays two XRP. Within the cap, so it settles. |
 | `2 / 10 XRP used (20%)` | The owner can see exactly what has been spent. |
 | 3. compromised | Now the agent is compromised. |

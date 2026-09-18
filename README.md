@@ -49,8 +49,8 @@ const agent = LeashAgent.create();
 // 2. 人間が、承認済みの支払先に上限付きの予算枠を作る
 const owner  = new LeashOwner(humanWallet);
 const budget = await owner.grantBudget({
-  payee: 'rVendor...',          // 支払先。以後変更不可
-  capXrp: '10',                 // 上限。以後変更不可
+  payee: 'rVendor...',          // 支払先。変更する取引型が存在しない
+  capXrp: '10',                 // 上限。増額できるのは持ち主だけ
   agentPublicKey: agent.publicKey,
   expiresInSec: 86400,          // 任意: 有効期限
 });
@@ -147,7 +147,7 @@ LEASH_OWNER_SEED=s... node bin/leash.js revoke --channel <id>
 | 守るもの | 手段 | 強制する主体 |
 |---|---|---|
 | **上限** | `PaymentChannelCreate` の `Amount` | **台帳** |
-| **支払先** | `PaymentChannelCreate` の `Destination`（変更不可） | **台帳** |
+| **支払先** | `PaymentChannelCreate` の `Destination` | **台帳** |
 | **口座鍵** | チャネルの `PublicKey` に署名鍵だけを登録 | 構造 |
 
 **承認済みの支払先1つにつき、枠を1本張る。**

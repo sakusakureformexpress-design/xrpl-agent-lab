@@ -47,8 +47,8 @@ const commands = {
     });
     console.log(`\n  作成しました`);
     console.log(`  channel : ${b.channelId}`);
-    console.log(`  上限    : ${b.capXrp} XRP（変更不可）`);
-    console.log(`  支払先  : ${b.payee}（変更不可）`);
+    console.log(`  上限    : ${b.capXrp} XRP（増額できるのはあなただけ）`);
+    console.log(`  支払先  : ${b.payee}（変更する手段は無い）`);
     console.log(`  tx      : ${b.txHash}`);
   },
 

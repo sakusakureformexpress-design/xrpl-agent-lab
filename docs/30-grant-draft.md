@@ -42,7 +42,8 @@ capability. It is that no one can prove the ceiling holds.
 XRPL Leash moves the ceiling out of the application and into the ledger.
 
 A budget is a payment channel. `Amount` is the ceiling; `Destination` is the payee. Both
-are fixed at creation and cannot be changed by any transaction type. The agent receives
+are set at creation. No transaction type can change the destination, and the cap can only
+be raised by the channel's own source account — which requires the account key. The agent receives
 only a signing key registered as the channel's `PublicKey` — never the owner's account
 key. It can sign claims; it cannot exceed the cap, redirect funds, or touch the account
 behind the channel.
@@ -70,7 +71,7 @@ economically viable in the first place.
 | Guarantee | Mechanism | Enforced by |
 |---|---|---|
 | Spending ceiling | `PaymentChannelCreate.Amount` | Ledger |
-| Approved payee | `PaymentChannelCreate.Destination` (immutable) | Ledger |
+| Approved payee | `PaymentChannelCreate.Destination` (no transaction can change it) | Ledger |
 | Key separation | Channel `PublicKey` = agent's signing key only | Structure |
 | Time limit | `CancelAfter` | Ledger |
 | Revocation | `PaymentChannelClaim` with `tfClose` | Owner |

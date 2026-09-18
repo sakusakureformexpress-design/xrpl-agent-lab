@@ -6,7 +6,7 @@
  * 確かめること:
  *   A. 上限内のクレームは通る
  *   B. 上限を超えるクレームは「台帳が」拒否する（アプリの判断ではなく）
- *   C. 支払先は作成時に固定され、後から変更できない
+ *   C. 支払先は作成時に固定され、変更する取引型が存在しない
  *   D. エージェントには署名鍵しか渡らず、人間の口座鍵は渡らない
  */
 import { Wallet, signPaymentChannelClaim, xrpToDrops } from 'xrpl';
@@ -49,7 +49,7 @@ async function main() {
     TransactionType: 'PaymentChannelCreate',
     Account: human.address,
     Destination: vendor.address,          // ← 支払先。以後변更不可
-    Amount: xrpToDrops(CHANNEL_CAP_XRP),  // ← 上限。以後変更不可
+    Amount: xrpToDrops(CHANNEL_CAP_XRP),  // ← 上限。増額できるのは送金元だけ
     SettleDelay: 60,
     PublicKey: agent.publicKey,           // ← エージェントの公開鍵を登録
   });
