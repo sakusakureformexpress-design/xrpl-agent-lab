@@ -164,3 +164,80 @@ landscape 調査で空白2の唯一の実装として特定された **t54 x402 
 - [調査中] 開発者向けツールの過去採択実績（件数と具体例）
 - [調査中] 開発者向けツールの場合、成長マイルストーン（助成金の70%）をどう設定するか
 - [調査中] T54 がどういう位置づけで採択されたか
+
+---
+
+## 2026-09-18（追記）: 適格性の確定 — 制度文言・実績の両方で対象
+
+Scout の調査を Critic が一次ソースで再確認した。**対象で確定。**
+
+### 決定打: 公式 FAQ の Business Assessment Rubric
+
+出典: https://xrplgrants.org/faq （Critic が直接取得して原文確認）
+
+> "the project supports growth for the XRPL ecosystem, and has the potential to
+> drive incremental on-chain transactions, **and/or provide key infrastructure
+> and/or developer tooling for the XRPL ecosystem**"
+
+**オンチェーン取引の増加と "and/or" で並列**に、開発者ツール・インフラが
+評価対象として明記されている。「開発者向けだから不利」という構造ではない。
+
+### 実績: 開発者向けツールは多数採択されている
+
+Awardees ページ199件の機械集計（Scout 実施）:
+
+| 区分 | 件数 |
+|---|---|
+| `Usability/Developer Tooling` タグ | **55件** |
+| 厳格基準（ライブラリ/SDK/CLI/テスト基盤/開発者向けAPI） | **31件** |
+
+助成額の幅: XRPL Elixir $10,000 〜 Evernode / GateHub Data API $200,000
+
+**セキュリティ・制御系の採択例も存在する:**
+- VWBL（オンチェーンアクセス制御）$32,500
+- Alice's Ring $100,000
+- BEI API（開発者向けリスク管理API）$150,000
+
+### T54 は「開発者向けインフラ」として採択されていた
+
+Tenity Cohort 6（2025-06-25 発表）の採択時の記述:
+
+> "building **infrastructure** ... through a **unified SDK and API stack**"
+
+**$200,000。** つまり本プロジェクトと同じ立ち位置で満額が出ている。
+これは競合であると同時に、**このポジションで満額が出る証明**でもある。
+
+### AI 重点領域の混乱が解消した
+
+| | 内容 | 出典 | 扱い |
+|---|---|---|---|
+| **旧** | predictive analytics / anomaly detection / AI-powered risk assessment / algorithmic trading | RippleX 公式 dev.to 記事（**2024-09-24**、旧 AI Fund 立ち上げ時） | **古い。使わない** |
+| **現行** | **AI & Agentic Commerce**: Agent-to-agent payments (x402), AI-native financial products, **autonomous transaction infrastructure** | https://submit.xrplgrants.org/submit | **これが現行。直撃する** |
+
+本プロジェクトは旧リストには一致しないが、**現行記述には直撃する。**
+古い記事を根拠に「対象外では」と判断するのは誤り。
+
+### 成長マイルストーンの条件が緩い（重要）
+
+FAQ の原文（Critic 確認）:
+
+> "Growth-based milestones (~70% of the grant) for hitting on-chain metrics on
+> the XRP Ledger **or other key growth metrics**"
+
+**オンチェーン指標に限定されていない。** "or other key growth metrics" があるため、
+開発者向けツールでは統合数・採用リポジトリ数などを指標にできる可能性がある。
+
+ただし**具体的な設定事例は公開情報に存在しない**（Scout 確認）。
+実際にどう設定するかは採択後の個別交渉になると推測される。**推測。**
+
+### 補強材料
+
+XRPL 公式の agent 関連ドキュメント2本には、
+**Payment Channel / Credentials / Permissioned Domains / 支出上限に関する記述が無い**
+（Scout 確認）。公式ドキュメントのレベルでも、この領域は空白である。
+
+### 残るリスク（適格性ではなく、採択されるかどうかの問題）
+
+1. 応募窓口がクローズ中。次告知は 2026年10月
+2. 開発者向けツールの成長マイルストーン事例が公開情報に皆無
+3. T54 との差別化が必要（OSS であること / 台帳が強制すること）
