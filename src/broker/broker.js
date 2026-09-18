@@ -13,6 +13,7 @@ import { Wallet } from 'xrpl';
 import { rpc, autofill } from '../lib/rpc.js';
 import { LEASH_SOURCE_TAG } from '../leash/constants.js';
 import { decide, validatePolicy } from './policy.js';
+import { buildMemo, policyHash } from '../leash/memo.js';
 
 export class LeashBroker {
   /**
@@ -61,7 +62,12 @@ export class LeashBroker {
   }
 
   reload() {
-    const policy = JSON.parse(fs.readFileSync(this.policyPath, 'utf8'));
+    const raw = fs.readFileSync(this.policyPath, 'utf8');
+    // ポリシーのハッシュを取っておき、各支払いのメモに刻む。
+    // 台帳はメモを検証しないので強制力は無いが、
+    // 「その支払いの時点で有効だったルール」が改ざん不能な形で残る。
+    this.policyHash = policyHash(raw);
+    const policy = JSON.parse(raw);
     const errs = validatePolicy(policy);
     if (errs.length) throw new Error('ポリシーが不正:\n  - ' + errs.join('\n  - '));
     if (policy.brokerAccount !== this.wallet.address) {
@@ -107,7 +113,7 @@ export class LeashBroker {
    *
    * @returns {Promise<{allow:boolean, code:string, reason:string, signedTxBlob?:string, payTo?:string, amountDrops?:string}>}
    */
-  async requestPayment({ agentName, payTo, amountDrops }) {
+  async requestPayment({ agentName, payTo, amountDrops, invoice, resource }) {
     return this.#withLock(agentName, async () => {
       const { all, key, state } = this.#loadState(agentName);
       const verdict = decide({ policy: this.policy, agentName, payTo, amountDrops, state });
@@ -121,12 +127,16 @@ export class LeashBroker {
       this.#saveState(all, key, state);
 
       try {
+        const memos = buildMemo({
+          agent: agentName, policy: this.policyHash, invoice, resource,
+        });
         const tx = await autofill({
           TransactionType: 'Payment',
           Account: this.wallet.address,
           Destination: payTo,
           Amount: String(amountDrops),
           SourceTag: LEASH_SOURCE_TAG,
+          ...(memos ? { Memos: memos } : {}),
         });
         const signed = this.wallet.sign(tx);
         return { ...verdict, signedTxBlob: signed.tx_blob, txHash: signed.hash, payTo, amountDrops: String(amountDrops) };

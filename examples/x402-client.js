@@ -30,6 +30,10 @@ export async function fetchWithPayment(url, broker, agentName) {
     agentName,
     payTo: accepted.payTo,
     amountDrops: accepted.amount,
+    // 何のための支払いかを台帳に残す。merchant 由来の値なので
+    // 判定には使わず、記録としてのみ渡す。
+    invoice: typeof accepted.extra?.invoiceId === 'string' ? accepted.extra.invoiceId.slice(0, 64) : undefined,
+    resource: typeof accepted.resource === 'string' ? accepted.resource.slice(0, 200) : undefined,
   });
 
   if (!verdict.allow) {
