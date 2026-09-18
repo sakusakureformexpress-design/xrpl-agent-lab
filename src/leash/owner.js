@@ -62,7 +62,10 @@ export class LeashOwner {
     return { ...budget, txHash: res.hash };
   }
 
-  /** 予算枠の一覧と消化状況を返す。 */
+  /**
+   * 予算枠の一覧と消化状況を返す。
+   * 公開情報のみを読むため、鍵を持たないインスタンスでも呼べる。
+   */
   async listBudgets() {
     const res = await rpc('account_channels', { account: this.address, ledger_index: 'validated' });
     return (res.channels ?? []).map((c) => {
@@ -71,6 +74,7 @@ export class LeashOwner {
       return {
         channelId: c.channel_id,
         payee: c.destination_account,
+        publicKey: c.public_key_hex,
         capXrp: dropsToXrp(c.amount),
         spentXrp: dropsToXrp(c.balance),
         remainingXrp: dropsToXrp(String(cap - spent)),

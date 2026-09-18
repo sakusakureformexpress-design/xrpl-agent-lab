@@ -69,6 +69,79 @@ await owner.revoke(budget.channelId);
 
 ---
 
+## エージェントから使う（MCP）
+
+MCP サーバを同梱している。Claude Code / Claude Desktop / Cursor など
+**MCP に対応したどのエージェント基盤からでも**使える。特定のベンダーに依存しない。
+
+```json
+{
+  "mcpServers": {
+    "xrpl-leash": {
+      "command": "node",
+      "args": ["/path/to/xrpl-agent-lab/src/mcp/server.js"],
+      "env": {
+        "LEASH_OWNER_ADDRESS": "rOwner...",
+        "LEASH_AGENT_SEED": "sEd..."
+      }
+    }
+  }
+}
+```
+
+**`LEASH_AGENT_SEED` はエージェント専用の鍵。予算の持ち主の鍵ではない。**
+このプロセスは予算を作ることも、上限を広げることも、支払先を変えることもできない。
+
+提供するツール:
+
+| ツール | 内容 |
+|---|---|
+| `list_budgets` | 誰にいくらまで払えるか、残りいくらか |
+| `authorize_payment` | 支払いの伝票に署名する。枠が無い相手・上限超過は断る |
+| `budget_status` | 特定の支払先の消化状況 |
+
+実際に MCP 越しに叩いた結果:
+
+```
+■ authorize_payment  2 XRP → 承認済みの支払先
+   Authorized 2 XRP. Remaining after redemption: 8 XRP
+   エラー扱い: いいえ
+
+■ authorize_payment  100 XRP → 上限超過
+   Refused: 100 XRP exceeds the 10 XRP left in this budget.
+   エラー扱い: はい ✓
+
+■ authorize_payment  1 XRP → 未承認の攻撃者
+   No budget exists for that address — there is no payment channel to sign against.
+   エラー扱い: はい ✓
+```
+
+再現: `node src/verify/04-mcp.js`
+
+> サーバ側のチェックは**早く失敗させるための親切**であって、本当の強制ではない。
+> このプロセスを改造しても、上限超過は台帳が `tecUNFUNDED_PAYMENT` で拒否する。
+
+---
+
+## 人間から使う（CLI）
+
+```bash
+# エージェント用の鍵を作る
+node bin/leash.js new-agent
+
+# 承認済みの支払先に、上限付きの枠を作る
+LEASH_OWNER_SEED=s... node bin/leash.js grant \
+  --payee rVendor... --cap 10 --agent-pubkey ED... --expires 86400
+
+# 消化状況を見る（鍵は不要。公開情報のみ）
+node bin/leash.js list --address rOwner...
+
+# 枠を閉じる。残額は持ち主に戻る
+LEASH_OWNER_SEED=s... node bin/leash.js revoke --channel <id>
+```
+
+---
+
 ## 仕組み
 
 | 守るもの | 手段 | 強制する主体 |
@@ -100,6 +173,8 @@ RLUSD が現時点で使えないのは技術的制約ではなく、
 | パス | 内容 |
 |---|---|
 | `src/leash/` | 本体。owner（人間）/ agent（AI）/ payee（支払先） |
+| `src/mcp/` | MCP サーバ（エージェント側。署名鍵しか持たない） |
+| `bin/leash.js` | 人間側の CLI |
 | `src/verify/` | testnet 実機での検証スクリプト |
 | `src/lib/rpc.js` | JSON-RPC クライアント |
 | `docs/` | 戦略・設計・申請準備 |
@@ -113,6 +188,7 @@ RLUSD が現時点で使えないのは技術的制約ではなく、
 | `src/verify/01-channel-cap.js` | 上限超過が台帳に拒否されるか |
 | `src/verify/02-token-cap.js` | ドル建てトークンで上限を強制できるか |
 | `src/verify/03-e2e.js` | 通しの動作（予算付与→利用→乗っ取り→防御→閉鎖） |
+| `src/verify/04-mcp.js` | MCP サーバがプロトコル越しに正しく動くか |
 
 ```bash
 npm install
