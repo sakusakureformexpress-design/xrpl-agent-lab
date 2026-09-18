@@ -30,6 +30,9 @@ export async function fetchWithPayment(url, broker, agentName) {
     agentName,
     payTo: accepted.payTo,
     amountDrops: accepted.amount,
+    // **実際に叩いた URL のホスト**を渡す。402 本文の resource は
+    // merchant（＝攻撃者でありうる）が自由に書ける値なので使わない。
+    host: new URL(url).hostname,
     // 何のための支払いかを台帳に残す。merchant 由来の値なので
     // 判定には使わず、記録としてのみ渡す。
     invoice: typeof accepted.extra?.invoiceId === 'string' ? accepted.extra.invoiceId.slice(0, 64) : undefined,

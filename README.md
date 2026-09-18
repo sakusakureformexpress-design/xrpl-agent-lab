@@ -195,6 +195,48 @@ npm install
 node src/verify/03-e2e.js   # テストネットのため実際の資金は動かない
 ```
 
+## 支払先をドメインで縛る
+
+支払先アドレスは実行時（402 の中身）にはじめて分かるため、人間が事前に承認できない。
+だが **「どのサービスから買ってよいか」はドメイン単位で承認できる。**
+
+XRPL には、ドメインと口座の紐付けを双方向で証明する仕組みがある。
+
+```
+ドメイン側  api-a.com が /.well-known/xrp-ledger.toml の
+            [[ACCOUNTS]] で rVendor... を宣言する
+
+口座側      rVendor... が AccountRoot.Domain に
+            "api-a.com" を設定する
+
+→ 両方が一致したときだけ、同じ主体が両方を支配している証拠になる
+```
+
+ポリシーにこう書く:
+
+```json
+"domains": {
+  "allowed": ["api-a.example.com", "api-b.example.com"],
+  "requireVerified": true,
+  "unverifiedMaxDrops": "1000"
+}
+```
+
+すると、乗っ取られたエージェントが仕掛けられる攻撃は次のように落ちる。
+
+| 攻撃 | 結果 |
+|---|---|
+| 402 に攻撃者のアドレスを仕込む | `DOMAIN_UNVERIFIED` — 承認済みドメインが claim していない |
+| 攻撃者のサイトを叩かせる | `DOMAIN_NOT_ALLOWED` — 許可ドメインに無い |
+
+`requireVerified: false` にすると、未検証の相手にも `unverifiedMaxDrops` までは
+払える（新しい業者を試す運用向け）。
+
+> 検証に使うホスト名は、**エージェントが実際に叩いた URL** から取る。
+> 402 本文が自称する `resource` は merchant が自由に書ける値なので使わない。
+
+---
+
 ## 計測と監査証跡
 
 本ツール経由の全取引に `SourceTag = 1279607123`（`0x4C454153` = "LEAS"）を打つ。

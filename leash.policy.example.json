@@ -1,6 +1,7 @@
 {
   "version": 1,
   "brokerAccount": "rBrokerAccountAddressHere",
+  "network": "testnet",
 
   "agents": {
     "research-bot": {
@@ -12,7 +13,13 @@
       "payees": {
         "alwaysAllow": [],
         "denyList": [],
-        "autoApprove": true
+        "autoApprove": true,
+
+        "domains": {
+          "allowed": ["api-a.example.com", "api-b.example.com"],
+          "requireVerified": true,
+          "unverifiedMaxDrops": "1000"
+        }
       }
     }
   }

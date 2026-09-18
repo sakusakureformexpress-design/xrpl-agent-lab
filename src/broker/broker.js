@@ -14,6 +14,7 @@ import { rpc, autofill } from '../lib/rpc.js';
 import { LEASH_SOURCE_TAG } from '../leash/constants.js';
 import { decide, validatePolicy } from './policy.js';
 import { buildMemo, policyHash } from '../leash/memo.js';
+import { verifyPayeeDomain } from './domain.js';
 
 export class LeashBroker {
   /**
@@ -113,10 +114,33 @@ export class LeashBroker {
    *
    * @returns {Promise<{allow:boolean, code:string, reason:string, signedTxBlob?:string, payTo?:string, amountDrops?:string}>}
    */
-  async requestPayment({ agentName, payTo, amountDrops, invoice, resource }) {
+  /**
+   * @param {object} p
+   * @param {string} p.host エージェントが**実際に叩いた** URL のホスト名。
+   *                        402 本文が自称する resource ではない（そちらは攻撃者が書ける）
+   */
+  async requestPayment({ agentName, payTo, amountDrops, invoice, resource, host }) {
+    // ドメイン検証は通信を伴う。金額や支払先で先に落ちるものに対して
+    // 外部へ取りに行くのは無駄であり、要求を投げるだけで外向き通信を
+    // 誘発できてしまう。**先にローカルだけで判定する。**
+    let domain;
+    const needsDomain = Object.hasOwn(this.policy.agents ?? {}, agentName)
+      && this.policy.agents[agentName]?.payees?.domains;
+    if (needsDomain) {
+      const DOMAIN_CODES = new Set(['DOMAIN_NOT_ALLOWED', 'DOMAIN_UNVERIFIED', 'OVER_UNVERIFIED_LIMIT']);
+      const { state: pre } = this.#loadState(agentName);
+      const dry = decide({ policy: this.policy, agentName, payTo, amountDrops, state: pre });
+      if (!dry.allow && !DOMAIN_CODES.has(dry.code)) return dry;  // 通信せずに拒否
+
+      const v = host
+        ? await verifyPayeeDomain({ host, payTo, network: this.policy.network })
+        : { verified: false, reason: 'ホスト名が渡されていない' };
+      domain = { host, ...v };
+    }
+
     return this.#withLock(agentName, async () => {
       const { all, key, state } = this.#loadState(agentName);
-      const verdict = decide({ policy: this.policy, agentName, payTo, amountDrops, state });
+      const verdict = decide({ policy: this.policy, agentName, payTo, amountDrops, state, domain });
       if (!verdict.allow) return verdict;
 
       // **署名の前に枠を確保する。** 署名してから記録すると、その間に
@@ -128,7 +152,8 @@ export class LeashBroker {
 
       try {
         const memos = buildMemo({
-          agent: agentName, policy: this.policyHash, invoice, resource,
+          agent: agentName, policy: this.policyHash, invoice,
+          resource: resource ?? (host ? `https://${host}` : undefined),
         });
         const tx = await autofill({
           TransactionType: 'Payment',

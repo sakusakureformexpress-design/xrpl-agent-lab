@@ -35,9 +35,11 @@ export function validatePolicy(p) {
  * @param {string} p.payTo        支払先アドレス（実行時に発見される）
  * @param {string} p.amountDrops  金額（drops、文字列）
  * @param {object} p.state        当日の集計 { spentDrops, payees: string[] }
+ * @param {object} [p.domain]     ドメイン検証の結果 { host, verified }。
+ *                                通信はブローカー側で済ませ、ここには結果だけ渡す
  * @returns {{allow:boolean, reason:string, code:string}}
  */
-export function decide({ policy, agentName, payTo, amountDrops, state }) {
+export function decide({ policy, agentName, payTo, amountDrops, state, domain }) {
   const deny = (code, reason) => ({ allow: false, code, reason });
 
   // Object.hasOwn で確認する。`policy.agents[name]` だけだと `constructor` や
@@ -69,6 +71,7 @@ export function decide({ policy, agentName, payTo, amountDrops, state }) {
     return deny('DENYLISTED', 'この支払先は明示的に拒否されている');
   }
 
+
   // 金額の判定を先に行う。金額そのものが範囲外なら、支払先の事情は関係ない。
   if (amount > BigInt(l.perPaymentMaxDrops)) {
     return deny('OVER_PER_PAYMENT', `1回の上限 ${l.perPaymentMaxDrops} drops を超えている`);
@@ -77,6 +80,29 @@ export function decide({ policy, agentName, payTo, amountDrops, state }) {
   const spent = BigInt(state.spentDrops ?? '0');
   if (spent + amount > BigInt(l.dailyTotalMaxDrops)) {
     return deny('OVER_DAILY', `本日の合計が上限 ${l.dailyTotalMaxDrops} drops を超える（使用済 ${spent}）`);
+  }
+
+  // ── ドメイン束縛 ────────────────────────────────────────────
+  // 人間はアドレスを事前承認できないが、ドメインなら承認できる。
+  // 攻撃者が仕込んだアドレスは、承認済みドメインが claim していないため落ちる。
+  const dom = payees.domains;
+  if (dom) {
+    const host = domain?.host;
+    if (Array.isArray(dom.allowed) && dom.allowed.length > 0) {
+      if (!host || !dom.allowed.some((d) => d.toLowerCase() === String(host).toLowerCase())) {
+        return deny('DOMAIN_NOT_ALLOWED', `ドメイン "${host ?? '(不明)'}" は許可リストに無い`);
+      }
+    }
+    if (!domain?.verified) {
+      if (dom.requireVerified) {
+        return deny('DOMAIN_UNVERIFIED',
+          `支払先とドメインの双方向検証を通っていない${domain?.reason ? `（${domain.reason}）` : ''}`);
+      }
+      if (dom.unverifiedMaxDrops != null && amount > BigInt(dom.unverifiedMaxDrops)) {
+        return deny('OVER_UNVERIFIED_LIMIT',
+          `未検証の支払先への上限 ${dom.unverifiedMaxDrops} drops を超えている`);
+      }
+    }
   }
 
   const known = payees.alwaysAllow?.includes(payTo) || state.payees.includes(payTo);
