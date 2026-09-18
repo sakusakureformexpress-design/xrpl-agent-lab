@@ -152,7 +152,7 @@ working testnet proof, all in public commit history.
 
 - GitHub: https://github.com/sakusakureformexpress-design/xrpl-agent-lab
 - Demo video: https://youtu.be/yg3UMwMczU4
-- Pitch deck: _TBD_
+- Pitch deck: `dist/xrpl-leash-pitch.pdf`（リポジトリに同梱。9ページ・A4）
 
 ---
 
@@ -164,6 +164,6 @@ working testnet proof, all in public commit history.
   問い合わせかヒアリングで実務的な水準を掴んでから埋める
 - **RLUSD は「できない」と書かない。** 「発行体のフラグ待ち」が事実
 - **未実装を現在形で書かない。** Current status の "Not yet built" は必ず残す
-- **ピッチデックの URL は、共有設定を確認してから入れる。**
-  現在は非公開の Artifact であり、そのままでは審査員が開けない。
-  共有設定を「リンクを知っている人は閲覧可」にするか、PDF に書き出して差し替える
+- **ピッチデックは PDF をリポジトリに同梱した**（`dist/xrpl-leash-pitch.pdf`）。
+  Artifact は非公開のため、そちらの URL は使わない。
+  再生成は `bash scripts/make-pdf.sh`
