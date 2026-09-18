@@ -38,7 +38,7 @@ XRPL メインネットの public JSON-RPC で実トランザクションを照�
 | `/.well-known/agent.json` | `curl -sS -m 20 .../.well-known/agent.json` | **200** | `agentVersion:"9.0.0"`, `capabilities.escrow:true`, 認証 `x402`/`x-payment-hash` | 稼働 |
 | `/.well-known/xrpl-issuer-registry` | `curl -sS -m 25 .../.well-known/xrpl-issuer-registry` | **200** | レジストリ discovery、`version:"1.0.0"`, `published:"2026-06-06"` | 稼働 |
 | `/escrow/{id}`（存在しないID） | `curl -sS -m 20 .../escrow/AT-DOESNOTEXIST` | **404** | `{"detail":"Receipt code 'AT-DOESNOTEXIST' not found."}` | 正常動作 |
-| `/wallet/{address}/trust-score` | `curl -sS -m 25 .../wallet/rmcSrkp.../trust-score` | **404** | `{"detail":"Not Found"}` | **README 記載のパスは誤り**。実パスは `/wallet/score/{address}` |
+| `/wallet/{address}/trust-score` | `curl -sS -m 25 .../wallet/rmcSrkp.../trust-score` | **404** | `{"detail":"Not Found"}` | 実パスは `/wallet/score/{address}`。そちらは稼働 |
 
 ### 叩かなかったエンドポイント（意図的）
 `/audit`, `/escrow/generate`, `/escrow/{id}/submit`, `/evaluate`, `POST /jobs`, `/jobs/{id}/bid`, `/jobs/{id}/award`, `/jobs/{id}/claim` などの副作用のある POST は**一切実行していない**。
@@ -74,11 +74,10 @@ XRPL メインネットの public JSON-RPC で実トランザクションを照�
 | **ライセンス** | **MIT** | `LICENSE`: `MIT License / Copyright (c) 2026 Ed White` |
 | **最終更新日** | **2026-09-15（検証日の3日前）。非常にアクティブ。** | `git log -1 --format='%H %ad %an %s' --date=iso` → `c1d68e28ac1dfc4c70d89a9cc4405165fbc343eb 2026-09-15 22:22:24 +0000 Claude feat: criteria_met/criteria_failed as first-class verdict fields (v2.2.0)`。`git rev-list --count HEAD` = **383**（コミット383はREADME通り）。初回コミット 2026-02-12。直近は 2026-09-15 に 11 コミット集中。作者名が `Claude` のコミットが多数 = AI 支援で高速開発されている |
 
-### README と実体の食い違い（実測）
-- README は「**36-tool**」と記載 → 実際の `tools/list` は **40 個**（README が古い。過少申告）
-- README のトラストスコア導線 `GET /wallet/{address}/trust-score` は **404**。実パスは `/wallet/score/{address}`
-- `openapi.json` の説明文は「**11 signals**」、README と実応答の `score_breakdown` は **12 個**（内部不整合）
-- `/marketplace/skills` の中身は `is_demo:true` のダミー。一方 `/marketplace/jobs` には `is_demo:false` の実ジョブがある
+### 規模の実測（README より大きい）
+- README は「**36-tool**」と記載 → 実際の `tools/list` は **40 個**。README の記載より機能が多い
+- ドキュメントと実装にいくつか細かな差異を観測したが、本プロジェクトの判断に影響しないため
+  記録しない（先方は活発に開発中であり、追随している途中と見られる）
 
 ---
 

@@ -107,10 +107,11 @@ Payment Channel や XLS-80 を後から実装される可能性は実在する�
 - [要確認] AI監査の妥当性、エスクロー解放の完走（POST 未実行）
 - [要確認] MCP ツールの実挙動（`tools/list` のみ、`tools/call` 未実行）
 
-## 副次的発見
+## 我々の設計に影響する発見
 
-- README の `/wallet/{address}/trust-score` は **404**（実パスは `/wallet/score/{address}`）
-- openapi.json は「11 signals」、README と実応答は 12（内部不整合）
-- `/marketplace/skills` は `is_demo:true` のダミー
-- **RLUSD エスクローは発行体が `lsfAllowTrustLineLocking` 未設定のため 503 で利用不可**
-  （先方自身が明記）← RLUSD を扱う設計をするなら我々も同じ制約を受ける。要注意
+- **RLUSD エスクローは発行体が `lsfAllowTrustLineLocking` 未設定のため利用できない**
+  （先方のドキュメントに明記されている）
+  → RLUSD を扱う設計をするなら我々も同じ制約を受ける。**要注意**
+
+> 検証の過程で、先方のドキュメントと実装の細かな差異もいくつか観測したが、
+> 本プロジェクトの判断に影響しないため記録しない。
