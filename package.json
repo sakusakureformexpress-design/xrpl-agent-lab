@@ -1,0 +1,27 @@
+{
+  "name": "xrpl-agent-lab",
+  "version": "1.0.0",
+  "description": "XRPL Grants 採択を目標とするプロジェクト。 サブエージェント7体による PDCA で企画・実装・検証を回す。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sakusakureformexpress-design/xrpl-agent-lab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sakusakureformexpress-design/xrpl-agent-lab/issues"
+  },
+  "homepage": "https://github.com/sakusakureformexpress-design/xrpl-agent-lab#readme",
+  "type": "module",
+  "dependencies": {
+    "xrpl": "^5.3.0"
+  }
+}
