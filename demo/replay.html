@@ -27,6 +27,10 @@
   button:hover{border-color:var(--mid)}
   button:focus-visible{outline:2px solid var(--key); outline-offset:2px}
   button.primary{background:var(--key); color:#0A0F14; border-color:var(--key)}
+  .speed{font-size:12px; color:var(--dim); display:flex; align-items:center; gap:6px}
+  .speed select{font-family:var(--ui); font-size:12.5px; background:var(--term); color:var(--ink);
+                border:1px solid var(--edge); border-radius:6px; padding:6px 8px}
+  .speed select:focus-visible{outline:2px solid var(--key); outline-offset:2px}
 
   .term{background:var(--term); border:1px solid var(--edge); border-radius:10px;
         padding:20px 22px; font-family:var(--mono); font-size:13px; line-height:1.75;
@@ -58,6 +62,13 @@
     <h1>XRPL Leash — recorded run</h1>
     <span class="tag">XRPL TESTNET · REAL TRANSACTIONS</span>
     <span class="spacer"></span>
+    <label class="speed">pace
+      <select id="speed">
+        <option value="3.2">brisk · ~75s</option>
+        <option value="4.2" selected>normal · ~100s</option>
+        <option value="5.4">slow · ~130s</option>
+      </select>
+    </label>
     <button id="replay" type="button">Replay</button>
     <button id="play" class="primary" type="button">Play</button>
   </div>
@@ -67,6 +78,8 @@
 
   <div class="foot">
     <span id="status">ready</span>
+    <span>·</span>
+    <span id="dur">—</span>
     <span>·</span>
     <a href="https://github.com/sakusakureformexpress-design/xrpl-agent-lab" target="_blank" rel="noopener">github.com/sakusakureformexpress-design/xrpl-agent-lab</a>
   </div>
@@ -149,6 +162,10 @@
      cap:'The limit was never in the agent’s code. It was in the ledger.'},
   ];
 
+  const speedSel = document.getElementById('speed');
+  // 各行の間隔に掛ける倍率。素の合計は約24秒なので、録画に使える長さまで伸ばす。
+  const pace = () => Number(speedSel.value) || 4.2;
+
   const term = document.getElementById('term');
   const capBox = document.getElementById('cap');
   const capText = document.getElementById('capText');
@@ -194,7 +211,7 @@
       capBox.classList.remove('empty');
     }
     status.textContent = `${idx} / ${D.length}`;
-    timer = setTimeout(step, row.d ?? 120);
+    timer = setTimeout(step, Math.round((row.d ?? 120) * pace()));
   }
 
   playBtn.addEventListener('click', () => {
@@ -208,6 +225,14 @@
     }
   });
   replayBtn.addEventListener('click', () => { reset(); playBtn.click(); });
+
+  function showDuration(){
+    const total = D.reduce((a, r) => a + (r.d ?? 120), 0) * pace() / 1000;
+    document.getElementById('dur').textContent =
+      `runtime ≈ ${Math.floor(total / 60)}:${String(Math.round(total % 60)).padStart(2, '0')}`;
+  }
+  speedSel.addEventListener('change', showDuration);
+  showDuration();
 
   // 静止状態でも中身が分かるように、最初の数行は出しておく
   reset();
