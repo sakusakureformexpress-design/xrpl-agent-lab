@@ -40,7 +40,36 @@ Scout の主張を Critic が直接確認した。**事実である。**
 
 ---
 
-## 再現できなかった主張（要注意）
+## 【2026-09-18 追記・訂正】Scout の主張は正しかった
+
+下記「再現できなかった主張」は、**その後の再調査で確認された。Scout が正しい。**
+
+出典（一次ソース）:
+`https://submit.xrplgrants.org/submit/5fdbb7d9-57ee-4005-a309-8308c4ba2b46/xrpl-grants-ai-fund-application`
+
+このページ（統合申請フォーム）に、RippleX Ecosystem Programs の重点領域として
+以下が明記されている:
+
+| 重点領域 | 原文 |
+|---|---|
+| **AI & Agentic Commerce** | "Agent-to-agent payments (x402), AI-native financial products, **autonomous transaction infrastructure**" |
+| **Infrastructure & Tooling** | "**Developer tools**, wallets, oracles, analytics, compliance/KYC infrastructure, bridges" |
+
+`xrplgrants.org` のトップページには「DeFi / RWA / Payments / Trade Finance」しか
+載っておらず、**重点領域の詳細は申請フォーム側にある**という構成だった。
+Critic が xrplgrants.org だけを見て「再現できず」と判定したのは**調査範囲の誤り**。
+
+また同ページには、応募者は会社のステージに関わらず
+**"code access for technical review"（技術審査のためのコード開示）が必要**と記載。
+これは FAQ の「オープンソース化は非必須だがコード開示は必須」と整合する。
+
+→ **この記述は申請書の根拠として使用してよい。**
+
+---
+
+## （以下は訂正前の記録。経緯として残す）
+
+## 再現できなかった主張（当時）
 
 Scout は「現行ポータルの優先領域に **AI & Agentic Commerce: Agent-to-agent payments (x402),
 AI-native financial products, autonomous transaction infrastructure** が明記」と報告した。

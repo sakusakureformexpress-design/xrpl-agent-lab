@@ -133,3 +133,34 @@ landscape 調査で空白2の唯一の実装として特定された **t54 x402 
 - [要確認] 10月発表の新プログラムの内容・締切
 - [要確認] 成長マイルストーンの具体的数値例（公開情報に存在しない。個別交渉の可能性）
 - [要確認] **日本の税務区分（雑所得/事業所得、消費税、日米租税条約）→ 税理士相談必須**
+
+
+---
+
+## 2026-09-18（追記）: 適格性の確認 — 対象である
+
+**懸念**: 作ってから「対象外」と言われると時間が無駄になる。先に確認した。
+
+**結論: 対象である。しかも重点領域に2つ同時に該当する。**
+
+出典: `https://submit.xrplgrants.org/submit/5fdbb7d9-57ee-4005-a309-8308c4ba2b46/xrpl-grants-ai-fund-application`
+
+| 重点領域 | 原文 | 本プロジェクトの該当部分 |
+|---|---|---|
+| **AI & Agentic Commerce** | "Agent-to-agent payments (x402), AI-native financial products, **autonomous transaction infrastructure**" | エージェント決済の制御層そのもの |
+| **Infrastructure & Tooling** | "**Developer tools**, wallets, oracles, analytics, compliance/KYC infrastructure, bridges" | 開発者向けツールキットとして該当 |
+
+**重要**: 「開発者向けツールだから対象外では」という懸念は**解消した**。
+`Developer tools` が重点領域に明記されている。
+
+また `compliance/KYC infrastructure` という記載もあり、
+**「エージェントの支出を統制する」という性格はこの文脈にも乗る。**
+
+### 申請時の条件
+- 会社のステージに関わらず **"code access for technical review"（コード開示）が必要**
+  → FAQ の「オープンソース化は非必須だがコード開示は必須」と整合
+
+### まだ確認中
+- [調査中] 開発者向けツールの過去採択実績（件数と具体例）
+- [調査中] 開発者向けツールの場合、成長マイルストーン（助成金の70%）をどう設定するか
+- [調査中] T54 がどういう位置づけで採択されたか
