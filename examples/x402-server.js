@@ -82,7 +82,11 @@ export function startMerchant({ payTo, priceDrops = '20000', port = 0 }) {
       res.writeHead(200, { 'content-type': 'application/json', 'PAYMENT-RESPONSE': b64(body) })
          .end(JSON.stringify({ symbol: 'XRP/USD', price: 3.41, volume24h: 1284000000, asOf: new Date().toISOString() }));
     } catch (e) {
-      res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: e.message }));
+      // 内部の詳細（RPC のエラー文など）はそのまま返さない。
+      // 支払い側に必要なのは「受け付けられなかった」ことだけ。
+      console.error('[merchant]', e.message);
+      res.writeHead(400, { 'content-type': 'application/json' })
+         .end(JSON.stringify({ error: 'payment_rejected' }));
     }
   });
 

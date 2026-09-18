@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Wallet } from 'xrpl';
-import { rpc, autofill } from '../lib/rpc.js';
+import { rpc, autofill, ledgerSequence } from '../lib/rpc.js';
 import { LEASH_SOURCE_TAG } from '../leash/constants.js';
 import { decide, validatePolicy } from './policy.js';
 import { buildMemo, policyHash } from '../leash/memo.js';
@@ -24,6 +24,7 @@ export class LeashBroker {
    * @param {string} [p.statePath] 当日集計の保存先
    */
   #locks = new Map();
+  #nextSequence = null;   // 署名済み・未送信の tx があると台帳は進まないため自前で採番する
 
   constructor({ policyPath, seed, statePath }) {
     this.policyPath = policyPath;
@@ -81,7 +82,15 @@ export class LeashBroker {
 
   #loadState(agentName) {
     let all = {};
-    try { all = JSON.parse(fs.readFileSync(this.statePath, 'utf8')); } catch { /* 初回 */ }
+    try {
+      all = JSON.parse(fs.readFileSync(this.statePath, 'utf8'));
+    } catch (e) {
+      // ファイルが無いのは初回。それ以外（壊れている等）は黙って
+      // 「使用済み 0」にしてはいけない。上限が無効化される。
+      if (e.code !== 'ENOENT') {
+        throw new Error(`状態ファイルを読めない（上限を判定できないため中止）: ${this.statePath}: ${e.message}`);
+      }
+    }
     const key = `${agentName}:${this.#today()}`;
     return { all, key, state: all[key] ?? { spentDrops: '0', payees: [] } };
   }
@@ -91,7 +100,10 @@ export class LeashBroker {
     // 古い日付は捨てる
     const today = this.#today();
     for (const k of Object.keys(all)) if (!k.endsWith(today)) delete all[k];
-    fs.writeFileSync(this.statePath, JSON.stringify(all, null, 2));
+    // 本人以外が読めないようにする。なお**これは完全性の保証ではない**。
+    // このファイルを書き換えられる者は日次上限を無効化できる。
+    // 最終的な被害の上限はブローカー口座の残高である（README 参照）。
+    fs.writeFileSync(this.statePath, JSON.stringify(all, null, 2), { mode: 0o600 });
   }
 
   /** 現在の消化状況（読み取り専用）。 */
@@ -155,18 +167,27 @@ export class LeashBroker {
           agent: agentName, policy: this.policyHash, invoice,
           resource: resource ?? (host ? `https://${host}` : undefined),
         });
+        // 署名しただけで未送信の tx があると台帳の Sequence は進まない。
+        // 台帳の値をそのまま使うと連続署名が同じ番号になり、片方しか通らない。
+        const onLedger = await ledgerSequence(this.wallet.address);
+        const seq = this.#nextSequence != null && this.#nextSequence > onLedger
+          ? this.#nextSequence : onLedger;
+        this.#nextSequence = seq + 1;
+
         const tx = await autofill({
           TransactionType: 'Payment',
           Account: this.wallet.address,
           Destination: payTo,
           Amount: String(amountDrops),
           SourceTag: LEASH_SOURCE_TAG,
+          Sequence: seq,
           ...(memos ? { Memos: memos } : {}),
         });
         const signed = this.wallet.sign(tx);
         return { ...verdict, signedTxBlob: signed.tx_blob, txHash: signed.hash, payTo, amountDrops: String(amountDrops) };
       } catch (e) {
-        // 署名に失敗したら確保した枠を戻す
+        // 署名に失敗したら確保した枠と採番を戻す
+        if (this.#nextSequence != null) this.#nextSequence -= 1;
         const { all: a2, key: k2 } = this.#loadState(agentName);
         this.#saveState(a2, k2, before);
         throw e;

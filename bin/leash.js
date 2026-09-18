@@ -6,13 +6,20 @@
  *
  *   LEASH_OWNER_SEED=s... node bin/leash.js <command>
  */
+import fs from 'node:fs';
 import { Wallet } from 'xrpl';
 import { LeashOwner } from '../src/leash/index.js';
 
 const [cmd, ...rest] = process.argv.slice(2);
-const args = Object.fromEntries(
-  rest.flatMap((a, i, arr) => (a.startsWith('--') ? [[a.slice(2), arr[i + 1]?.startsWith('--') ? true : arr[i + 1]]] : [])),
-);
+/** `--key value` と `--flag` を取り違えずに読む。 */
+const args = {};
+for (let i = 0; i < rest.length; i++) {
+  if (!rest[i].startsWith('--')) continue;
+  const key = rest[i].slice(2);
+  const next = rest[i + 1];
+  if (next === undefined || next.startsWith('--')) { args[key] = true; }
+  else { args[key] = next; i++; }
+}
 
 function ownerOrDie() {
   const seed = process.env.LEASH_OWNER_SEED;
@@ -27,9 +34,16 @@ const commands = {
   async 'new-agent'() {
     const w = Wallet.generate();
     console.log('新しいエージェント鍵を作りました。\n');
-    console.log(`  公開鍵 (grant に渡す): ${w.publicKey}`);
-    console.log(`  シード (エージェントに渡す): ${w.seed}\n`);
-    console.log('  ※ このシードはエージェント用です。予算の持ち主のシードとは別物です。');
+    console.log(`  公開鍵 (grant に渡す): ${w.publicKey}\n`);
+    if (args.out) {
+      fs.writeFileSync(args.out, w.seed + '\n', { mode: 0o600 });
+      console.log(`  シードを ${args.out} に書き出しました（本人のみ読み取り可）`);
+    } else {
+      console.log(`  シード (エージェントに渡す): ${w.seed}\n`);
+      console.log('  ⚠ シードを画面に出しました。シェル履歴・端末ログ・画面共有に残ります。');
+      console.log('    残したくない場合は --out <path> でファイルに書き出してください。');
+    }
+    console.log('\n  ※ このシードはエージェント用です。予算の持ち主のシードとは別物です。');
     console.log('  ※ エージェントは口座を持ちません。署名しかできません。');
   },
 
@@ -85,7 +99,7 @@ const commands = {
 if (!cmd || !commands[cmd]) {
   console.log(`XRPL Leash — 予算の持ち主のための操作
 
-  new-agent                             エージェント用の鍵を作る
+  new-agent [--out <path>]              エージェント用の鍵を作る
   grant --payee <addr> --cap <XRP>      予算枠を作る
         --agent-pubkey <hex> [--expires <秒>]
   list  [--address <addr>]              予算枠と消化状況を見る

@@ -14,3 +14,10 @@ build/
 # 個人的な文書（公開しない）
 docs/60-invitation.html
 node_modules/
+
+# ブローカーの実データ（例ファイルは追跡する）
+leash.policy.json
+*.policy.json
+!leash.policy.example.json
+.leash-state.json
+*-state.json

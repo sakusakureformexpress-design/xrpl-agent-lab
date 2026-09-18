@@ -9,10 +9,10 @@ import { decide, validatePolicy } from '../src/broker/policy.js';
 // --- テスト用の固定値 -------------------------------------------------------
 
 const PAYEE_A = 'rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe';
-const PAYEE_B = 'rH7Ln5kzGSNRgKPLpSpNDGNQNmMbzSMSUD';
+const PAYEE_B = 'rP6YR9uvE5wULGRB2Fgj6Efa8s7XembrVr';
 const PAYEE_C = 'rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH';
 const PAYEE_D = 'rLHzPsX6oXkzU2qL12kHCH8G8cnZv1rBJh';
-const DENIED = 'rDenyXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+const DENIED = 'rfxCbEYYdFxnskypDpBhFWyyk4USZY2pxD';
 
 const PER_PAYMENT_MAX = 100000n; // drops
 const DAILY_MAX = 5000000n; // drops

@@ -7,6 +7,8 @@
  */
 
 /** 設定の検証。壊れたポリシーで動き始めないようにする。 */
+import { isValidClassicAddress } from 'xrpl';
+
 export function validatePolicy(p) {
   const errs = [];
   if (!p || typeof p !== 'object') return ['policy が object ではない'];
@@ -56,11 +58,15 @@ export function decide({ policy, agentName, payTo, amountDrops, state, domain })
     return deny('BAD_POLICY', `エージェント "${agentName}" の limits が不正`);
   }
 
-  if (!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(payTo)) {
-    return deny('BAD_PAYEE', '支払先アドレスの形式が不正');
+  // 文字種と長さだけでなく、base58 のチェックサムまで検証する。
+  // 1文字違いのアドレスは「形式は正しいが存在しない口座」になりうる。
+  if (typeof payTo !== 'string' || !isValidClassicAddress(payTo)) {
+    return deny('BAD_PAYEE', '支払先アドレスが不正（チェックサムを含めて検証）');
   }
-  if (!/^\d+$/.test(String(amountDrops)) || BigInt(amountDrops) <= 0n) {
-    return deny('BAD_AMOUNT', '金額は正の整数（drops）である必要がある');
+  // String() を挟むと配列 ['100'] や数値 100 も通ってしまうため、
+  // 文字列であることを先に要求する。
+  if (typeof amountDrops !== 'string' || !/^\d+$/.test(amountDrops) || BigInt(amountDrops) <= 0n) {
+    return deny('BAD_AMOUNT', '金額は正の整数を表す文字列（drops）である必要がある');
   }
 
   const amount = BigInt(amountDrops);
@@ -105,12 +111,14 @@ export function decide({ policy, agentName, payTo, amountDrops, state, domain })
     }
   }
 
-  const known = payees.alwaysAllow?.includes(payTo) || state.payees.includes(payTo);
+  // 状態が壊れていても落とさない
+  const seen = Array.isArray(state?.payees) ? state.payees : [];
+  const known = payees.alwaysAllow?.includes(payTo) || seen.includes(payTo);
   if (!known) {
     if (!payees.autoApprove) {
       return deny('UNKNOWN_PAYEE', '未知の支払先。自動承認が無効なので人間の承認が要る');
     }
-    const newToday = state.payees.filter((x) => !payees.alwaysAllow?.includes(x)).length;
+    const newToday = seen.filter((x) => !payees.alwaysAllow?.includes(x)).length;
     if (l.newPayeesPerDay != null && newToday >= l.newPayeesPerDay) {
       return deny('NEW_PAYEE_QUOTA', `本日の新規支払先が上限 ${l.newPayeesPerDay} 件に達している`);
     }

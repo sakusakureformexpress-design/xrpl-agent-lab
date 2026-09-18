@@ -88,14 +88,44 @@ export async function submitAndWait(txBlob, { tries = 25, intervalMs = 4000 } = 
   return { validated: false, hash, result: 'UNVALIDATED', preliminary, message: '確定待ちでタイムアウト' };
 }
 
-/** 署名に必要なフィールドを埋める。 */
+/**
+ * 現在の手数料水準を drops で返す。
+ * 固定値だと混雑時に取り込まれない（open_ledger_fee は負荷で跳ね上がる）。
+ */
+export async function currentFeeDrops({ multiplier = 1.2, min = 12n, max = 10000n } = {}) {
+  try {
+    const f = await rpc('fee', {});
+    const open = BigInt(f.drops?.open_ledger_fee ?? '10');
+    const base = BigInt(f.drops?.minimum_fee ?? '10');
+    let want = (open > base ? open : base) * BigInt(Math.round(multiplier * 100)) / 100n;
+    if (want < min) want = min;
+    if (want > max) want = max;           // 異常値で口座を空にしない
+    return want.toString();
+  } catch {
+    return '20';                          // 取得に失敗しても止まらない
+  }
+}
+
+/**
+ * 署名に必要なフィールドを埋める。
+ *
+ * Sequence は呼び出し側が明示できる。署名しただけで未送信の tx がある場合、
+ * 台帳の Sequence はまだ進んでいないため、続けて署名すると同じ番号になり
+ * 片方しか通らない。連続して署名する側が自分で採番する必要がある。
+ */
 export async function autofill(tx) {
   const info = await rpc('account_info', { account: tx.Account, ledger_index: 'current' });
   const ledger = await rpc('ledger_current', {});
   return {
     ...tx,
-    Fee: tx.Fee ?? '20',
+    Fee: tx.Fee ?? await currentFeeDrops(),
     Sequence: tx.Sequence ?? info.account_data.Sequence,
     LastLedgerSequence: tx.LastLedgerSequence ?? ledger.ledger_current_index + 40,
   };
+}
+
+/** 台帳上の次の Sequence。 */
+export async function ledgerSequence(account) {
+  const info = await rpc('account_info', { account, ledger_index: 'current' });
+  return info.account_data.Sequence;
 }

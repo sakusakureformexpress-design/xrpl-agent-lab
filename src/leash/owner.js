@@ -61,7 +61,7 @@ export class LeashOwner {
       throw new Error(`予算枠の作成に失敗: ${res.result} ${res.message ?? ''}`);
     }
 
-    const budget = await this.#findBudget(payee);
+    const budget = await this.#findBudget(payee, agentPublicKey);
     return { ...budget, txHash: res.hash };
   }
 
@@ -72,16 +72,17 @@ export class LeashOwner {
   async listBudgets() {
     const res = await rpc('account_channels', { account: this.address, ledger_index: 'validated' });
     return (res.channels ?? []).map((c) => {
-      const cap = Number(c.amount);
-      const spent = Number(c.balance);
+      // drops は最大 10^17 まで取りうるため BigInt で扱う
+      const cap = BigInt(c.amount);
+      const spent = BigInt(c.balance);
       return {
         channelId: c.channel_id,
         payee: c.destination_account,
         publicKey: c.public_key_hex,
         capXrp: dropsToXrp(c.amount),
         spentXrp: dropsToXrp(c.balance),
-        remainingXrp: dropsToXrp(String(cap - spent)),
-        usedPercent: cap === 0 ? 0 : Math.round((spent / cap) * 1000) / 10,
+        remainingXrp: dropsToXrp((cap - spent).toString()),
+        usedPercent: cap === 0n ? 0 : Number((spent * 1000n) / cap) / 10,
         expiresAt: c.cancel_after ? new Date((c.cancel_after + 946684800) * 1000).toISOString() : null,
       };
     });
@@ -100,9 +101,14 @@ export class LeashOwner {
     return { result: res.result, txHash: res.hash };
   }
 
-  async #findBudget(payee) {
+  async #findBudget(payee, agentPublicKey) {
     const res = await rpc('account_channels', { account: this.address, destination_account: payee });
-    const c = res.channels?.[res.channels.length - 1];
+    // 一覧の末尾を「今作ったもの」とみなすのは誤り。順序は保証されない。
+    // 署名鍵で絞り、その中で最も新しいものを取る。
+    const mine = (res.channels ?? []).filter(
+      (x) => !agentPublicKey || x.public_key_hex === agentPublicKey,
+    );
+    const c = mine[mine.length - 1] ?? res.channels?.[res.channels.length - 1];
     if (!c) throw new Error('作成した予算枠が見つからない');
     return {
       channelId: c.channel_id,

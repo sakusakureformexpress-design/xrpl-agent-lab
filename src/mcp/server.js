@@ -55,7 +55,10 @@ const maxXrp = (a, b) => (Number(a) >= Number(b) ? a : b);
 /** Budgets whose signing key is this agent's. */
 async function myBudgets() {
   const all = await view.listBudgets();
-  return all.filter((b) => b.publicKey === agent.publicKey || b.publicKey === undefined);
+  // このエージェントの鍵で署名できる枠だけを返す。
+  // publicKey が取れない枠を「自分のもの」と推定してはいけない
+  // （他のエージェント宛の枠に対してバウチャを作ってしまう）。
+  return all.filter((b) => b.publicKey === agent.publicKey);
 }
 
 server.registerTool(
