@@ -155,6 +155,21 @@
 
   .note{font-size:12.5px; color:var(--ink-3); line-height:1.8}
 
+  .tbl-real{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+  .tbl-real table{width:100%; border-collapse:collapse; font-size:13.5px}
+  .tbl-real th,.tbl-real td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  .tbl-real th{font-size:11.5px; color:var(--ink-3); letter-spacing:.05em; background:var(--surface-2); font-weight:700; white-space:nowrap}
+  .tbl-real tr:last-child td{border-bottom:none}
+  .tbl-real .sm{font-size:11.5px; color:var(--ink-3)}
+  .tbl-real a{font-family:var(--mono); font-size:12px; color:var(--accent)}
+  .pill{font-family:var(--mono); font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; display:inline-block}
+  .pill.ok{background:var(--ok-soft); color:var(--ok)}
+  .pill.no{background:var(--block-soft); color:var(--block)}
+  .callout-real{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--ok); border-radius:0 10px 10px 0; padding:16px 18px; display:flex; flex-direction:column; gap:10px}
+  .callout-real h3{font-family:var(--display); font-size:15px}
+  .callout-real pre{margin:0; font-family:var(--mono); font-size:11.5px; line-height:1.75; color:var(--ink-2); background:var(--surface-2); padding:13px 14px; border-radius:7px; overflow-x:auto}
+  a{color:var(--accent)}
+
   @media (max-width:640px){
     .analogy{grid-template-columns:1fr}
     .panels{grid-template-columns:1fr}
@@ -202,6 +217,7 @@
   <p class="eyebrow">3 — 実際に動かす</p>
   <h2>同じ攻撃を、両方に仕掛けてみる</h2>
   <p class="lede">左は「ソフトウェアが上限を守る」いまのやり方。右が XRPL Leash。<br>まったく同じ手順を踏ませて、結果がどう変わるか見てください。</p>
+  <p class="note"><strong>これは仕組みを理解するための説明用です</strong>（金額は円に置き換えています）。実際に XRPレジャー上で動かした記録は、この下にあります。</p>
 
   <div class="sim">
     <div class="simbar">
@@ -239,6 +255,52 @@
         <div class="damage"><span>被害額</span><b class="zero" id="rightDmg">0円</b></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">3.5 — 本物の記録</p>
+  <h2>実際に XRPレジャーで動かしました</h2>
+  <p class="lede">上の図は説明用ですが、こちらは<strong>テストネットの実機で動かした記録</strong>です。誰でも同じ手順で再現でき、取引はエクスプローラで確認できます。</p>
+
+  <div class="tbl-real">
+  <table>
+    <tr><th>やったこと</th><th>台帳の返答</th><th>取引</th></tr>
+    <tr>
+      <td>予算枠を作る<br><span class="sm">上限 10 XRP・支払先を固定</span></td>
+      <td><span class="pill ok">tesSUCCESS</span></td>
+      <td><a href="https://testnet.xrpl.org/transactions/87DE7F799F032BCEE43F194BC4EC7854A5756FCC2A4A3054EE72702BF4952C16" target="_blank" rel="noopener">87DE7F79…</a></td>
+    </tr>
+    <tr>
+      <td>上限内の支払い<br><span class="sm">3 XRP ≤ 10 XRP</span></td>
+      <td><span class="pill ok">tesSUCCESS</span></td>
+      <td><a href="https://testnet.xrpl.org/transactions/214E65E824B6C7ED07143EBA4D8797971576334238BDF4B594B2564717CCA13A" target="_blank" rel="noopener">214E65E8…</a></td>
+    </tr>
+    <tr>
+      <td><strong>上限を超える支払い</strong><br><span class="sm">50 XRP &gt; 10 XRP</span></td>
+      <td><span class="pill no">tecUNFUNDED_PAYMENT</span></td>
+      <td><a href="https://testnet.xrpl.org/transactions/C34C542C7D67E87BEDFF5C27D084BCACCDDA310E0564753821A49CD045799897" target="_blank" rel="noopener">C34C542C…</a></td>
+    </tr>
+  </table>
+  </div>
+
+  <p class="note"><code>tecUNFUNDED_PAYMENT</code> は「資金が足りない」という台帳のエラーです。<strong>アプリケーションが判断して断ったのではなく、XRPレジャー自身が受け付けませんでした。</strong>エージェントは正しい署名を作れていたにもかかわらず、です。</p>
+
+  <div class="callout-real">
+    <h3>通しで動かした結果</h3>
+    <pre>2. エージェントが正常に使う
+  A へ 2 XRP   → tesSUCCESS  ✓ 支払い成立
+  B へ 1.5 XRP → tesSUCCESS  ✓ 支払い成立
+
+4. ⚠ エージェントが乗っ取られた
+  攻撃4-a: 上限を超えて請求（100 XRP &gt; 10 XRP）
+    → tecUNFUNDED_PAYMENT  ✓ 台帳が拒否
+  攻撃4-b: 未承認の攻撃者へ払おうとする
+    攻撃者宛の予算枠: なし
+    → ✓ 枠が無いため署名する対象が存在しない
+
+  人間の口座の被害: 0 XRP</pre>
+    <p class="note">コードと再現手順: <a href="https://github.com/sakusakureformexpress-design/xrpl-agent-lab" target="_blank" rel="noopener">github.com/sakusakureformexpress-design/xrpl-agent-lab</a></p>
   </div>
 </section>
 
@@ -340,12 +402,13 @@
   <div class="status">
     <div class="status-row"><span class="st done">完了</span><span>既存プロジェクト 55件を調査。「払う」側は埋まっていて、「払わせない」側が空白だと確認</span></div>
     <div class="status-row"><span class="st done">完了</span><span>最有力の競合を実際に動かして検証。支払先の許可リストも上限の台帳強制も<strong>実装されていない</strong>ことをソースコードで確認</span></div>
-    <div class="status-row"><span class="st done">完了</span><span>助成金の要件を確定。窓口は現在クローズ、次は2026年10月に発表</span></div>
-    <div class="status-row"><span class="st now">次</span><span>テストネットで、上限を超える支払いが<strong>実際に台帳に拒否されること</strong>を実証する</span></div>
-    <div class="status-row"><span class="st next">その後</span><span>動くMVPを作り、10月の募集開始に合わせて申請する</span></div>
+    <div class="status-row"><span class="st done">完了</span><span>助成金の要件を確定。重点領域に該当することを確認。窓口は現在クローズ、次は2026年10月に発表</span></div>
+    <div class="status-row"><span class="st done">完了</span><span><strong>テストネットで実証。</strong>上限を超える支払いが台帳に拒否されることを実機で確認</span></div>
+    <div class="status-row"><span class="st done">完了</span><span><strong>MVP が動いた。</strong>予算付与 → 利用 → 乗っ取り → 防御 → 枠の閉鎖まで通しで成功</span></div>
+    <div class="status-row"><span class="st now">次</span><span>デモ動画とピッチ資料を作り、10月の募集開始に合わせて申請する</span></div>
   </div>
 
-  <p class="note"><strong>未解決の問題も一つあります。</strong> Payment Channel は XRP でしか使えず、ドル建ての RLUSD では上限を強制できません。ドル建てでどう実現するかは、まだ答えが出ていません。次の検証で最初に確かめる項目です。</p>
+  <p class="note"><strong>ドル建ての扱いについて。</strong> Payment Channel は XRP でしか使えません。ただし検証の結果、<strong>ドル建てトークンのロック自体は XRPレジャーで可能</strong>だと分かりました（Escrow を使用）。RLUSD が現時点で使えないのは技術的な制約ではなく、<strong>発行体が対応フラグを立てていないため</strong>です。なお Escrow は分割払い出しができないため、継続的な少額決済は XRP 建てが必要になります。</p>
 </section>
 
 </div>
