@@ -10,3 +10,6 @@ __pycache__/
 dist/
 build/
 .DS_Store
+
+# 個人的な文書（公開しない）
+docs/60-invitation.html
