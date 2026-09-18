@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "brokerAccount": "rBrokerAccountAddressHere",
+
+  "agents": {
+    "research-bot": {
+      "limits": {
+        "perPaymentMaxDrops": "100000",
+        "dailyTotalMaxDrops": "5000000",
+        "newPayeesPerDay": 3
+      },
+      "payees": {
+        "alwaysAllow": [],
+        "denyList": [],
+        "autoApprove": true
+      }
+    }
+  }
+}
