@@ -1,7 +1,7 @@
 {
-  "name": "xrpl-agent-lab",
+  "name": "xrpl-leash",
   "version": "1.0.0",
-  "description": "XRPL Grants 採択を目標とするプロジェクト。 サブエージェント7体による PDCA で企画・実装・検証を回す。",
+  "description": "Ledger-enforced spending limits and payee restrictions for AI agents on the XRP Ledger",
   "main": "index.js",
   "directories": {
     "doc": "docs"
@@ -15,7 +15,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/sakusakureformexpress-design/xrpl-agent-lab/issues"
   },
