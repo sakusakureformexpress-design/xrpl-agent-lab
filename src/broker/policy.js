@@ -14,6 +14,7 @@ export function validatePolicy(p) {
   if (!p.agents || typeof p.agents !== 'object') errs.push('agents が無い');
 
   for (const [name, a] of Object.entries(p.agents ?? {})) {
+    if (!a || typeof a !== 'object') { errs.push(`agents.${name} が object ではない`); continue; }
     const l = a.limits ?? {};
     for (const k of ['perPaymentMaxDrops', 'dailyTotalMaxDrops']) {
       if (!/^\d+$/.test(String(l[k] ?? ''))) errs.push(`agents.${name}.limits.${k} は整数文字列が必要`);
@@ -39,8 +40,19 @@ export function validatePolicy(p) {
 export function decide({ policy, agentName, payTo, amountDrops, state }) {
   const deny = (code, reason) => ({ allow: false, code, reason });
 
-  const agent = policy.agents?.[agentName];
-  if (!agent) return deny('UNKNOWN_AGENT', `エージェント "${agentName}" はポリシーに存在しない`);
+  // Object.hasOwn で確認する。`policy.agents[name]` だけだと `constructor` や
+  // `toString` などがプロトタイプ鎖上の値にヒットし、未知のエージェントを
+  // 通してしまう（その後 limits が無く例外で落ちる）。agentName は外部入力。
+  const agent = Object.hasOwn(policy.agents ?? {}, agentName) ? policy.agents[agentName] : undefined;
+  if (!agent || typeof agent !== 'object') {
+    return deny('UNKNOWN_AGENT', `エージェント "${agentName}" はポリシーに存在しない`);
+  }
+
+  // ポリシーが壊れていても例外で落とさず、拒否として返す。
+  const lim = agent.limits;
+  if (!lim || !/^\d+$/.test(String(lim.perPaymentMaxDrops ?? '')) || !/^\d+$/.test(String(lim.dailyTotalMaxDrops ?? ''))) {
+    return deny('BAD_POLICY', `エージェント "${agentName}" の limits が不正`);
+  }
 
   if (!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(payTo)) {
     return deny('BAD_PAYEE', '支払先アドレスの形式が不正');

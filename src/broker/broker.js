@@ -58,7 +58,7 @@ export class LeashBroker {
   /** 現在の消化状況（読み取り専用）。 */
   status(agentName) {
     const { state } = this.#loadState(agentName);
-    const l = this.policy.agents?.[agentName]?.limits ?? {};
+    const l = (Object.hasOwn(this.policy.agents ?? {}, agentName) ? this.policy.agents[agentName]?.limits : null) ?? {};
     return {
       date: this.#today(),
       spentDrops: state.spentDrops,

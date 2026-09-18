@@ -74,7 +74,7 @@ economically viable in the first place.
 | Key separation | Channel `PublicKey` = agent's signing key only | Structure |
 | Time limit | `CancelAfter` | Ledger |
 | Revocation | `PaymentChannelClaim` with `tfClose` | Owner |
-| Adoption measurement | `SourceTag = 1279414611` on every transaction | Public ledger |
+| Adoption measurement | `SourceTag = 1279607123` on every transaction | Public ledger |
 
 The library is split along the trust boundary: `LeashOwner` holds the account key,
 `LeashAgent` holds only a signing keypair and has no account, `LeashPayee` redeems
@@ -107,7 +107,7 @@ owner closes a budget. Loss to the owner's account: 0 XRP.
 
 ## Success metrics (on-chain)
 
-Every transaction carries `SourceTag = 1279414611`, so all figures below are verifiable
+Every transaction carries `SourceTag = 1279607123`, so all figures below are verifiable
 by third parties directly from the ledger. No self-reported numbers.
 
 | Metric | Source |
