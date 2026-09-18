@@ -1,0 +1,212 @@
+<title>XRPL Leash 全体像</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --bg:#F7F7FA; --card:#FFFFFF; --soft:#EFEFF5; --soft2:#E4E4EE;
+    --ink:#191922; --ink2:#4B4B5C; --ink3:#7C7C90;
+    --line:#DDDDE8; --line2:#C2C2D2;
+    --ac:#5B3FD6; --ac-soft:#ECE8FB;
+    --ok:#1C7A55; --ok-soft:#DFF0E8;
+    --no:#B33A48; --no-soft:#FAE4E7;
+    --wa:#8A6510; --wa-soft:#F9EFD8;
+    --d:'Outfit','Noto Sans JP',system-ui,sans-serif;
+    --b:'Noto Sans JP',system-ui,sans-serif;
+    --m:'JetBrains Mono',ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#111117; --card:#1A1A23; --soft:#22222D; --soft2:#2C2C39;
+    --ink:#EDEDF4; --ink2:#B0B0C2; --ink3:#83839A;
+    --line:#2C2C39; --line2:#3D3D4D;
+    --ac:#A48CFF; --ac-soft:#221B3D;
+    --ok:#5EC79B; --ok-soft:#142C23;
+    --no:#E88A95; --no-soft:#331C21;
+    --wa:#D6A84A; --wa-soft:#2C2413;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#111117; --card:#1A1A23; --soft:#22222D; --soft2:#2C2C39;
+    --ink:#EDEDF4; --ink2:#B0B0C2; --ink3:#83839A;
+    --line:#2C2C39; --line2:#3D3D4D;
+    --ac:#A48CFF; --ac-soft:#221B3D;
+    --ok:#5EC79B; --ok-soft:#142C23;
+    --no:#E88A95; --no-soft:#331C21;
+    --wa:#D6A84A; --wa-soft:#2C2413;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--b); font-size:15px; line-height:1.85}
+  .w{max-width:820px; margin:0 auto; padding-inline:18px; padding-block:40px 72px;
+     display:flex; flex-direction:column; gap:34px}
+  h1,h2{font-family:var(--d); margin:0; text-wrap:balance; letter-spacing:-.01em}
+  h1{font-size:clamp(28px,6vw,42px); font-weight:700; line-height:1.15}
+  h2{font-size:clamp(18px,3.4vw,22px); font-weight:700}
+  h3{font-family:var(--b); font-size:14.5px; font-weight:700; margin:0}
+  p{margin:0; color:var(--ink2)}
+  strong{color:var(--ink); font-weight:700}
+  code{font-family:var(--m); font-size:.88em; background:var(--soft); padding:1px 5px; border-radius:4px}
+  a{color:var(--ac)}
+
+  .eye{font-family:var(--m); font-size:11px; letter-spacing:.14em; color:var(--ac); font-weight:700}
+  .lead{font-size:16.5px; line-height:1.9; color:var(--ink)}
+  section{display:flex; flex-direction:column; gap:15px}
+  .div{height:1px; background:var(--line)}
+
+  .hero{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:26px 26px 24px;
+        display:flex; flex-direction:column; gap:14px}
+  .one{font-family:var(--d); font-weight:700; font-size:clamp(16px,2.8vw,19px); line-height:1.6;
+       border-left:3px solid var(--ac); padding-left:16px; color:var(--ink)}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:11px; padding:15px 17px}
+  .stat .v{font-family:var(--m); font-weight:700; font-size:22px; color:var(--ac); line-height:1.25}
+  .stat .l{font-size:12.5px; color:var(--ink3); margin-top:4px; line-height:1.5}
+
+  .links{display:flex; flex-direction:column; gap:9px}
+  .lk{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+      border-radius:10px; padding:14px 16px; text-decoration:none; color:inherit}
+  .lk:hover{border-color:var(--line2)}
+  .lk .ic{font-family:var(--m); font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--ac);
+          background:var(--ac-soft); padding:4px 8px; border-radius:5px; flex:none; margin-top:2px}
+  .lk .tx strong{display:block; font-family:var(--d); font-size:15px}
+  .lk .tx span{font-size:13px; color:var(--ink3); line-height:1.6}
+
+  .tbl{overflow-x:auto; border:1px solid var(--line); border-radius:11px; background:var(--card)}
+  table{width:100%; border-collapse:collapse; font-size:13.5px}
+  th,td{text-align:left; padding:11px 15px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-family:var(--m); font-size:11px; letter-spacing:.05em; color:var(--ink3); background:var(--soft); white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td{color:var(--ink2)} td strong{color:var(--ink)}
+  .pill{font-family:var(--m); font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; display:inline-block}
+  .p-ok{background:var(--ok-soft); color:var(--ok)}
+  .p-no{background:var(--no-soft); color:var(--no)}
+  .p-wa{background:var(--wa-soft); color:var(--wa)}
+
+  ul{margin:0; padding-left:1.15em; display:flex; flex-direction:column; gap:9px}
+  li{color:var(--ink2); line-height:1.8}
+  li strong{color:var(--ink)}
+
+  .note{background:var(--soft); border-radius:10px; padding:15px 17px; font-size:13.5px; color:var(--ink2); line-height:1.8}
+  .note strong{color:var(--ink)}
+  .warn{background:var(--wa-soft); color:var(--ink2)}
+  .warn strong{color:var(--ink)}
+  .mono{font-family:var(--m); font-size:12px}
+</style>
+
+<div class="w">
+
+<section>
+  <p class="eye">PROJECT INDEX · 2026.09.18</p>
+  <h1>XRPL Leash</h1>
+  <div class="hero">
+    <p class="one">AIエージェントの支出上限と支払先を、アプリではなく<br>XRPレジャー本体に守らせるツールキット。</p>
+    <p>エージェントはプロンプトインジェクションで乗っ取られる。既存の予算管理はどれもエージェント自身のコードの中にあるため、乗っ取られた時点で制限も一緒に無効化される。<strong>見張り役が犯人だった</strong>という構図を、台帳に守らせることで断つ。</p>
+  </div>
+  <div class="grid">
+    <div class="stat"><div class="v">87 / 87</div><div class="l">自動テスト 合格</div></div>
+    <div class="stat"><div class="v">25</div><div class="l">セキュリティ指摘に対応</div></div>
+    <div class="stat"><div class="v">180+</div><div class="l">調査の出典URL</div></div>
+    <div class="stat"><div class="v">MIT</div><div class="l">公開リポジトリ</div></div>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">RESOURCES</p>
+  <h2>資料一覧</h2>
+  <div class="links">
+    <a class="lk" href="https://github.com/sakusakureformexpress-design/xrpl-agent-lab" target="_blank" rel="noopener">
+      <span class="ic">CODE</span><span class="tx"><strong>GitHub リポジトリ</strong>
+      <span>本体・検証スクリプト・調査ログ・申請準備。全履歴公開</span></span></a>
+    <a class="lk" href="https://claude.ai/artifact/1nuwWH7Xo6DzxqaMiSQj1A" target="_blank" rel="noopener">
+      <span class="ic">説明</span><span class="tx"><strong>仕組みの説明ページ</strong>
+      <span>非エンジニア向け。攻撃を受けたときの挙動を触って動かせる</span></span></a>
+    <a class="lk" href="https://claude.ai/artifact/4XtpBfeCWhuHNczaGHcgM4" target="_blank" rel="noopener">
+      <span class="ic">DEMO</span><span class="tx"><strong>実行記録の自動再生</strong>
+      <span>テストネットの実記録を字幕付きで再生。録画してデモ動画に使う</span></span></a>
+    <a class="lk" href="https://claude.ai/artifact/WXfX3RxbdfRXc6XkV5Txk5" target="_blank" rel="noopener">
+      <span class="ic">PITCH</span><span class="tx"><strong>ピッチデック（英語・12枚）</strong>
+      <span>助成金提出用。競合検証の grep 出力と testnet の tx を含む</span></span></a>
+    <a class="lk" href="https://claude.ai/artifact/YMKgybKwq4PCkKsNypDERH" target="_blank" rel="noopener">
+      <span class="ic">私信</span><span class="tx"><strong>共同開発の打診（非公開）</strong>
+      <span>エンジニアの友人へ渡す技術メモ。リポジトリには含めていない</span></span></a>
+  </div>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">MECHANISM</p>
+  <h2>仕組み</h2>
+  <div class="tbl"><table>
+    <tr><th>守るもの</th><th>手段</th><th>強制する主体</th></tr>
+    <tr><td><strong>上限</strong></td><td><code>PaymentChannelCreate.Amount</code></td><td><strong>台帳</strong></td></tr>
+    <tr><td><strong>支払先</strong></td><td><code>PaymentChannelCreate.Destination</code></td><td><strong>台帳</strong></td></tr>
+    <tr><td>口座鍵</td><td>チャネルの <code>PublicKey</code> に署名鍵だけを登録</td><td>構造</td></tr>
+    <tr><td>未知の支払先</td><td><code>xrp-ledger.toml</code> × <code>Domain</code> の双方向検証</td><td>ブローカー</td></tr>
+    <tr><td>監査証跡</td><td><code>SourceTag</code> ＋ Memo にポリシーのハッシュ</td><td>台帳（記録）</td></tr>
+  </table></div>
+  <p><strong>承認済みの支払先1つにつき、枠を1本張る。</strong>エージェントは枠のある相手にしか払えず、枠の上限を超えられない。渡すのは署名権だけで、口座の鍵は渡さない。</p>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">EVIDENCE</p>
+  <h2>実機で確認したこと</h2>
+  <div class="tbl"><table>
+    <tr><th>操作</th><th>台帳の返答</th><th>判定</th></tr>
+    <tr><td>上限内のクレーム（3 XRP ≤ 10 XRP）</td><td class="mono">tesSUCCESS</td><td><span class="pill p-ok">通った</span></td></tr>
+    <tr><td><strong>上限超過のクレーム（50 XRP &gt; 10 XRP）</strong></td><td class="mono">tecUNFUNDED_PAYMENT</td><td><span class="pill p-no">台帳が拒否</span></td></tr>
+    <tr><td>未承認アドレスへの支払い</td><td class="mono">枠が存在しない</td><td><span class="pill p-no">構造上不可能</span></td></tr>
+    <tr><td>ドル建てトークンのロック（Escrow）</td><td class="mono">tesSUCCESS</td><td><span class="pill p-ok">可能</span></td></tr>
+  </table></div>
+  <p class="note"><strong>署名は正しかった。それでも台帳が拒否した。</strong>アプリケーションのコードは一切関与していない。tx hash はリポジトリの <code>docs/logs/</code> にあり、テストネットのエクスプローラで誰でも確認できる。</p>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">FINDINGS</p>
+  <h2>調べて分かった、動機づけになる事実</h2>
+  <ul>
+    <li><strong>XRPL 公式の権限委譲では、金額の上限を付けられない。</strong>「granular permission はハードコードで、通貨の限定すらできない」と公式に明記されている。<strong>金額を縛れるのは Payment Channel と Escrow だけ</strong>だった。</li>
+    <li><strong>x402 の XRPL スキームは直接 <code>Payment</code> しか受け付けない。</strong>つまり x402 で払うには、エージェントに口座の署名権を渡すしかない。<strong>解こうとしている問題が、標準の中に残っている。</strong></li>
+    <li><strong>Hooks は XRPL に存在しない</strong>（Xahau の機能）。任意のルールを台帳上で実行させる道は無い。</li>
+    <li>最有力の競合をソースコードで検証した結果、<strong>支払先の許可リストも上限の台帳強制も実装されていなかった</strong>（grep で0件）。</li>
+  </ul>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">STATUS</p>
+  <h2>現在地</h2>
+  <div class="tbl"><table>
+    <tr><th>項目</th><th>状態</th></tr>
+    <tr><td>コア実装（owner / agent / payee）</td><td><span class="pill p-ok">完了</span></td></tr>
+    <tr><td>testnet での実証（tx hash 付き）</td><td><span class="pill p-ok">完了</span></td></tr>
+    <tr><td>MCP サーバ・人間側 CLI</td><td><span class="pill p-ok">完了</span></td></tr>
+    <tr><td>ブローカー・ドメイン束縛・x402 統合</td><td><span class="pill p-ok">完了</span></td></tr>
+    <tr><td>申請書・ピッチデック・デモ台本</td><td><span class="pill p-ok">完了</span></td></tr>
+    <tr><td>デモ動画の録画</td><td><span class="pill p-wa">録画するだけ</span></td></tr>
+    <tr><td>Ripple への問い合わせ</td><td><span class="pill p-wa">送るだけ</span></td></tr>
+    <tr><td>メインネット対応・ダッシュボード・Python版</td><td><span class="pill p-no">未着手</span></td></tr>
+  </table></div>
+  <p class="note warn"><strong>助成金の応募窓口は現在クローズしている。</strong>次は 2026年10月に新プログラムが発表される予定。週次で自動監視しており、変化があったときだけ通知される。</p>
+</section>
+
+<div class="div"></div>
+
+<section>
+  <p class="eye">LIMITS</p>
+  <h2>正直な限界</h2>
+  <ul>
+    <li><strong>Payment Channel は XRP 限定。</strong>ドル建てのロックは Escrow で可能だが分割払い出しができない。RLUSD が使えないのは技術的制約ではなく<strong>発行体がフラグを立てていないため</strong>。</li>
+    <li><strong>ブローカーの機械を掌握されると、ブローカー口座の残高までは失われる。</strong>ポリシーも状態もその機械の上にあるため書き換えられる。実装では消せない構造的な限界。</li>
+    <li><strong>市場はまだ小さい。</strong>XRPL 上の x402 は毎時3,663件だが1事業者分の数字で、業界全体では約半分が自己取引等の人工的なものと分類されている。</li>
+    <li><strong>チームが弱い。</strong>非エンジニア1人＋AIエージェント。XRPL の実装判断ができる人を探している。</li>
+  </ul>
+</section>
+
+</div>
