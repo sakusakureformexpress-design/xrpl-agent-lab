@@ -21,11 +21,43 @@ export class LeashBroker {
    * @param {string} p.seed       ブローカー口座のシード（本口座のものではない）
    * @param {string} [p.statePath] 当日集計の保存先
    */
+  #locks = new Map();
+
   constructor({ policyPath, seed, statePath }) {
     this.policyPath = policyPath;
     this.statePath = statePath ?? path.join(path.dirname(policyPath), '.leash-state.json');
-    this.wallet = Wallet.fromSeed(seed);
+    // 列挙不可にする。JSON.stringify やログ出力、エラーのダンプに
+    // シードが乗らないようにするため。
+    Object.defineProperty(this, 'wallet', {
+      value: Wallet.fromSeed(seed), enumerable: false, writable: false, configurable: false,
+    });
     this.reload();
+  }
+
+  /** シリアライズされても鍵を出さない。 */
+  toJSON() {
+    return { brokerAccount: this.policy?.brokerAccount, policyPath: this.policyPath };
+  }
+
+  /**
+   * エージェント単位で直列化する。
+   *
+   * これが無いと、並行した要求が全て「使用済 0」の状態を読んでから
+   * 署名してしまい、日次上限を要求件数の倍数だけ突破できる
+   * （実測: 上限 100000 drops に対し 5 件同時で 500000 drops 署名）。
+   */
+  async #withLock(key, fn) {
+    const prev = this.#locks.get(key) ?? Promise.resolve();
+    let release;
+    const mine = prev.then(() => new Promise((r) => { release = r; }));
+    this.#locks.set(key, mine);
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (this.#locks.get(key) === mine) this.#locks.delete(key);
+    }
   }
 
   reload() {
@@ -76,25 +108,35 @@ export class LeashBroker {
    * @returns {Promise<{allow:boolean, code:string, reason:string, signedTxBlob?:string, payTo?:string, amountDrops?:string}>}
    */
   async requestPayment({ agentName, payTo, amountDrops }) {
-    const { all, key, state } = this.#loadState(agentName);
-    const verdict = decide({ policy: this.policy, agentName, payTo, amountDrops, state });
-    if (!verdict.allow) return verdict;
+    return this.#withLock(agentName, async () => {
+      const { all, key, state } = this.#loadState(agentName);
+      const verdict = decide({ policy: this.policy, agentName, payTo, amountDrops, state });
+      if (!verdict.allow) return verdict;
 
-    const tx = await autofill({
-      TransactionType: 'Payment',
-      Account: this.wallet.address,
-      Destination: payTo,
-      Amount: String(amountDrops),
-      SourceTag: LEASH_SOURCE_TAG,
+      // **署名の前に枠を確保する。** 署名してから記録すると、その間に
+      // 割り込んだ要求が古い残高を読んでしまう。
+      const before = { spentDrops: state.spentDrops, payees: [...state.payees] };
+      state.spentDrops = (BigInt(state.spentDrops) + BigInt(amountDrops)).toString();
+      if (!state.payees.includes(payTo)) state.payees.push(payTo);
+      this.#saveState(all, key, state);
+
+      try {
+        const tx = await autofill({
+          TransactionType: 'Payment',
+          Account: this.wallet.address,
+          Destination: payTo,
+          Amount: String(amountDrops),
+          SourceTag: LEASH_SOURCE_TAG,
+        });
+        const signed = this.wallet.sign(tx);
+        return { ...verdict, signedTxBlob: signed.tx_blob, txHash: signed.hash, payTo, amountDrops: String(amountDrops) };
+      } catch (e) {
+        // 署名に失敗したら確保した枠を戻す
+        const { all: a2, key: k2 } = this.#loadState(agentName);
+        this.#saveState(a2, k2, before);
+        throw e;
+      }
     });
-    const signed = this.wallet.sign(tx);
-
-    // 署名した時点で予算を消費したものとして記録する（二重発行を防ぐ）
-    state.spentDrops = (BigInt(state.spentDrops) + BigInt(amountDrops)).toString();
-    if (!state.payees.includes(payTo)) state.payees.push(payTo);
-    this.#saveState(all, key, state);
-
-    return { ...verdict, signedTxBlob: signed.tx_blob, txHash: signed.hash, payTo, amountDrops: String(amountDrops) };
   }
 
   /** ブローカー口座の残高。最大被害額そのもの。 */

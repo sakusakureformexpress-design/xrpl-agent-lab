@@ -83,7 +83,9 @@ export async function submitAndWait(txBlob, { tries = 25, intervalMs = 4000 } = 
       }
     } catch { /* まだ見つからない */ }
   }
-  return { validated: false, hash, result: preliminary, message: '確定待ちでタイムアウト' };
+  // 台帳で確定していないものを成功として返さない。
+  // preliminary の tesSUCCESS は「今のところ通りそう」以上の意味を持たない。
+  return { validated: false, hash, result: 'UNVALIDATED', preliminary, message: '確定待ちでタイムアウト' };
 }
 
 /** 署名に必要なフィールドを埋める。 */

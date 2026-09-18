@@ -40,6 +40,18 @@ const view = new LeashOwner({ address: OWNER, sign: () => { throw new Error('thi
 
 const server = new McpServer({ name: 'xrpl-leash', version: '0.1.0' });
 
+/**
+ * 発行済みバウチャの累計額をチャネルごとに覚えておく。
+ *
+ * 台帳上の `balance` は**換金済みの額**でしかない。未換金のバウチャがある状態で
+ * 台帳の値から次の累計額を計算すると、前のバウチャより小さい額を発行してしまい、
+ * 支払先がその差額を回収できなくなる。
+ * （Payment Channel のクレームは累計額なので、小さい額は上書きにならず単に無効）
+ */
+const issued = new Map();   // channelId -> 発行済みの最大累計額（XRP, string）
+
+const maxXrp = (a, b) => (Number(a) >= Number(b) ? a : b);
+
 /** Budgets whose signing key is this agent's. */
 async function myBudgets() {
   const all = await view.listBudgets();
@@ -113,15 +125,34 @@ server.registerTool(
     }
 
     // Vouchers carry the cumulative total drawn from the channel, not the per-payment amount.
-    const cumulative = (Number(budget.spentXrp) + amount).toString();
+    // Base it on the highest voucher we have already issued, not only on what has been
+    // redeemed on-ledger — otherwise an unredeemed voucher would be silently superseded
+    // by a smaller one and the payee could not collect the difference.
+    const base = maxXrp(budget.spentXrp, issued.get(budget.channelId) ?? '0');
+    const cumulative = (Number(base) + amount).toString();
+
+    if (Number(cumulative) > Number(budget.capXrp)) {
+      return {
+        isError: true,
+        content: [{
+          type: 'text',
+          text: `Refused: this would bring the total drawn to ${cumulative} XRP, above the ` +
+                `${budget.capXrp} XRP cap (${issued.get(budget.channelId) ?? '0'} XRP already authorized ` +
+                `but not yet redeemed). The ledger would reject it with tecUNFUNDED_PAYMENT.`,
+        }],
+      };
+    }
+
     const voucher = agent.authorize({ channelId: budget.channelId, cumulativeXrp: cumulative });
+    issued.set(budget.channelId, cumulative);
 
     return {
       content: [{
         type: 'text',
         text:
           `Authorized ${amountXrp} XRP to ${payee}.\n` +
-          `Remaining after redemption: ${(remaining - amount).toFixed(6).replace(/\.?0+$/, '')} XRP\n\n` +
+          `Cumulative authorized on this channel: ${cumulative} / ${budget.capXrp} XRP\n` +
+          `Remaining: ${(Number(budget.capXrp) - Number(cumulative)).toFixed(6).replace(/\.?0+$/, '')} XRP\n\n` +
           `Send this voucher to the service:\n${JSON.stringify(voucher, null, 2)}`,
       }],
     };

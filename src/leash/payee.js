@@ -31,7 +31,8 @@ export class LeashPayee {
     });
     const res = await submitAndWait(this.wallet.sign(filled).tx_blob);
     return {
-      accepted: res.result === 'tesSUCCESS',
+      // 台帳で確定したものだけを受領とみなす
+      accepted: res.validated === true && res.result === 'tesSUCCESS',
       result: res.result,
       txHash: res.hash,
       message: res.message,

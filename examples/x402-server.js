@@ -9,6 +9,7 @@
  * 参考: https://xrpl-x402.t54.ai/docs/xrpl-scheme
  */
 import http from 'node:http';
+import { decode } from 'xrpl';
 import { submitAndWait, rpc } from '../src/lib/rpc.js';
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64');
@@ -52,19 +53,32 @@ export function startMerchant({ payTo, priceDrops = '20000', port = 0 }) {
     // ── 支払いあり → 検証して決済 ───────────────────────
     try {
       const { accepted, payload } = unb64(sig);
-      if (accepted?.payTo !== payTo) throw new Error('payTo が一致しない');
       if (!payload?.signedTxBlob) throw new Error('signedTxBlob が無い');
 
+      // **署名済み tx の中身を必ず検証する。**
+      // accepted はクライアントが作った自己申告なので、それだけを見ても意味がない。
+      // 実際に台帳へ流れる tx をデコードして、宛先と金額を自分で確かめる。
+      const tx = decode(payload.signedTxBlob);
+      if (tx.TransactionType !== 'Payment') throw new Error('Payment ではない');
+      if (tx.Destination !== payTo) throw new Error(`宛先が自分宛でない: ${tx.Destination}`);
+      if (typeof tx.Amount !== 'string') throw new Error('XRP 建てではない');
+      if (BigInt(tx.Amount) < BigInt(priceDrops)) {
+        throw new Error(`金額が不足: ${tx.Amount} < ${priceDrops}`);
+      }
+
       const settled = await submitAndWait(payload.signedTxBlob);
-      if (settled.result !== 'tesSUCCESS') {
+      if (!settled.validated || settled.result !== 'tesSUCCESS') {
         const body = { success: false, errorReason: settled.result, transaction: settled.hash ?? '', network: 'xrpl:1' };
         res.writeHead(402, { 'content-type': 'application/json', 'PAYMENT-RESPONSE': b64(body) })
            .end(JSON.stringify(body));
         return;
       }
 
-      const tx = await rpc('tx', { transaction: settled.hash });
-      const body = { success: true, transaction: settled.hash, network: 'xrpl:1', payer: tx.Account ?? tx.tx_json?.Account };
+      const onLedger = await rpc('tx', { transaction: settled.hash });
+      const body = {
+        success: true, transaction: settled.hash, network: 'xrpl:1',
+        payer: onLedger.Account ?? onLedger.tx_json?.Account,
+      };
       res.writeHead(200, { 'content-type': 'application/json', 'PAYMENT-RESPONSE': b64(body) })
          .end(JSON.stringify({ symbol: 'XRP/USD', price: 3.41, volume24h: 1284000000, asOf: new Date().toISOString() }));
     } catch (e) {
