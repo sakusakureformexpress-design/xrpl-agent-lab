@@ -5,7 +5,19 @@ XRPL Grants 採択を目標とするプロジェクト。
 
 ## 現在のステータス
 
-**Sprint 1 未着手** — 企画未確定。まず助成金要件と競合の調査から。
+**Sprint 3 — 中核の実証に成功。**
+
+XRPL Testnet 上で、**上限を超える支払いを台帳が拒否すること**を実機で確認した。
+
+| 操作 | 結果 |
+|---|---|
+| 上限内のクレーム（3 XRP ≤ 10 XRP） | `tesSUCCESS` |
+| 上限超過のクレーム（50 XRP > 10 XRP） | **`tecUNFUNDED_PAYMENT`** |
+
+tx hash と再現手順: [docs/logs/2026-09-18.md](docs/logs/2026-09-18.md)
+検証コード: [src/verify/01-channel-cap.js](src/verify/01-channel-cap.js)
+
+次: RLUSD（Payment Channel は XRP 限定）の扱いを決める。
 
 ## ドキュメント
 

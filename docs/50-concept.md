@@ -146,3 +146,60 @@ Payment Channel / XLS-80 を後から実装される可能性は実在する。*
 
 **申請書には必ずこの区別を明記する。** 書かないと「Claude専用ツール」と誤解される
 リスクがある。
+
+---
+
+## 【2026-09-18 訂正】支払先の制限方式を変更した
+
+Sprint 3 の実証で、**当初の設計に誤りがあることが判明したため訂正する。**
+
+### 誤っていた前提
+
+> Permissioned Domains (XLS-80) で支払先を人間が事前承認したドメイン内に限定する
+
+**これは成立しない。** 一次ソースで確認:
+
+> "Permissioned domains **do not restrict ordinary payments**. ...
+> features such as Permissioned DEXes and Lending Protocols can use domains to
+> restrict and manage access. ... **General peer-to-peer transactions between
+> accounts remain unrestricted.**"
+> — https://xrpl.org/docs/concepts/tokens/decentralized-exchange/permissioned-domains
+
+XLS-80 は**許可型DEXとレンディング向けの機能**であり、通常の `Payment` には効かない。
+さらに同ページには「現時点で permissioned domains を使う XRP Ledger の機能は無い」
+とも記載されている。
+
+### 正しい方式（実証済み）
+
+**`PaymentChannelCreate` の `Destination` が、そのまま支払先の強制になる。**
+
+- `Destination` は作成時に固定され、**変更する取引型が存在しない**
+- チャネルの資金は、その宛先以外には出ていかない
+- つまり **「承認済みの支払先1つにつき、チャネル1本」** とすれば、
+  エージェントは構造上その相手にしか払えない
+
+実証: `docs/logs/2026-09-18.md`
+チャネル `177AE43...` の `destination_account` は作成時のまま固定されていることを確認。
+
+### この訂正の意味
+
+**設計はむしろ単純になった。**
+
+| | 当初案 | 訂正後 |
+|---|---|---|
+| 上限 | Payment Channel の `Amount` | 同じ（**実証済み**） |
+| 支払先 | XLS-80 + XLS-70（**成立しない**） | Payment Channel の `Destination`（**実証済み**） |
+| 必要な機能 | 3つ | **1つ** |
+
+Payment Channel という**単一の原語だけ**で、上限と支払先の両方を台帳に強制できる。
+依存する機能が減ったぶん、実装も説明も強くなった。
+
+### XLS-70 / XLS-80 の位置づけ直し
+
+強制の手段ではなくなったが、以下の用途では引き続き有用な可能性がある。**[要確認]**
+
+- **Credentials (XLS-70)**: 「この支払先は人間が承認した」という事実をオンチェーンに
+  残す。強制はしないが、監査証跡になる
+- **Permissioned Domains (XLS-80)**: 承認済み支払先の一覧をオンチェーンで公開・共有する
+
+**申請書では「強制する」と書かないこと。** 強制するのは Payment Channel だけである。
