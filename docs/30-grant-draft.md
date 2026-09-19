@@ -54,6 +54,20 @@ channel to, for no more than that channel holds.
 When an agent is compromised, the ledger still enforces what the human set. The blast
 radius is one channel's remaining balance.
 
+## Relationship to the Open Wallet Standard
+
+OWS ships a policy engine that enforces spending limits and allowlists before
+signing, and RippleX integrated it into the Starter Kit in September 2026. It is
+the right layer for key management and we do not duplicate it.
+
+The distinction is where the ceiling lives. OWS keeps the encrypted key and the
+policy file on the signing host and refuses to sign when a request violates
+policy — which stops a compromised agent. Its published threat model does not
+cover a compromised host, where both the key and the policy are within reach.
+A payment channel's cap is a ledger validation rule, so it holds even then.
+
+The intent is to sit on top of OWS as the wallet layer, not beside it.
+
 ## Why the XRP Ledger?
 
 These are protocol-level primitives, not contracts. There is no bytecode to audit, no

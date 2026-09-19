@@ -104,7 +104,7 @@
   <div class="stat">
     <div><div class="v">~4,400</div><div class="l">x402 payments per hour on the XRP Ledger</div></div>
     <div><div class="v">2026</div><div class="l">Ripple's AI Starter Kit, x402 and Stripe/Tempo MPP all shipped</div></div>
-    <div><div class="v">0</div><div class="l">open-source tools that enforce an agent's ceiling on-chain</div></div>
+    <div><div class="v">0</div><div class="l">tools that enforce an agent's ceiling <strong>on-chain</strong> — policy engines enforce it in software</div></div>
   </div>
   <p class="big">The rails for agents to pay arrived this year. The controls did not arrive with them.</p>
 </section>
@@ -134,6 +134,22 @@
 <span class="r">                  ↑ a lower bound. no upper bound exists.</span>
   </div>
   <p>Its spending cap lives in an advisory tool that never reaches the code path moving money. The comparable tool with real limits — AllowanceKit — enforces them in software, and does not support the XRP Ledger. The one product with payee gating is closed and commercial.</p>
+</section>
+
+<section class="slide">
+  <p class="n">03b · THE OBVIOUS OBJECTION</p>
+  <h2>"Doesn't the Open Wallet Standard already do this?"</h2>
+  <p class="big">It does — in the wallet. OWS ships a policy engine that enforces spending limits and allowlists before signing, and Ripple integrated it into the Starter Kit in September. We are not competing with it.</p>
+  <div class="tbl"><table>
+    <tr><th></th><th>Open Wallet Standard</th><th>This project</th></tr>
+    <tr><td><strong>Limit enforced by</strong></td><td>the vault, in software</td><td class="yes">the ledger</td></tr>
+    <tr><td><strong>Private key lives</strong></td><td>in the vault, on the signing host</td><td class="yes">with the human only</td></tr>
+    <tr><td><strong>Agent holds</strong></td><td>the right to request a signature</td><td>a channel signing key</td></tr>
+    <tr><td><strong>Compromised agent</strong></td><td class="yes">stopped</td><td class="yes">stopped</td></tr>
+    <tr><td><strong>Compromised host</strong></td><td class="no">keys and policy are both there</td><td class="yes">the cap does not move</td></tr>
+  </table></div>
+  <p class="big">OWS's published threat model does not cover a compromised signing machine. That is the gap: <strong>a policy file and an encrypted key sitting on the same disk protect against the agent, not against whoever owns the disk.</strong></p>
+  <p class="big gold">So this plugs into OWS rather than replacing it. Same wallet layer, a ceiling the host cannot lift.</p>
 </section>
 
 <section class="slide">
