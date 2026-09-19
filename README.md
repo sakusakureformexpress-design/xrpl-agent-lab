@@ -15,6 +15,10 @@ XRPL Leash は上限と支払先を**台帳の検証ルール**に置く。
 
 ---
 
+> **コードを読む前に** — 「なぜその設計なのか」は [`docs/adr/`](docs/adr/) にあります。
+> 却下した案とその理由も残してあるので、検討をやり直さずに済みます。
+> 手を入れる場合は [`CONTRIBUTING.md`](CONTRIBUTING.md) を先に。
+
 ## 動作確認済み（XRPL Testnet 実機）
 
 ```
@@ -217,7 +221,9 @@ RLUSD が現時点で使えないのは技術的制約ではなく、
 | `src/dashboard/` | 読み取り専用ダッシュボード（鍵を持たない・GET のみ） |
 | `src/verify/` | testnet 実機での検証スクリプト |
 | `src/lib/rpc.js` | JSON-RPC クライアント |
+| `docs/adr/` | **設計判断の記録。なぜその設計なのか、却下した案も含めて** |
 | `docs/` | 戦略・設計・申請準備 |
+| `CONTRIBUTING.md` | 開発に参加するときに最初に読むもの |
 | `research/` | 調査記録（出典URL付き） |
 | `demo/explainer.html` | 非エンジニア向けの説明ページ |
 | `demo/replay.html` | 実行記録の自動再生（字幕付き。録画してデモ動画に使える） |
