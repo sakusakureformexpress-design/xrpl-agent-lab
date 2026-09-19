@@ -13,6 +13,8 @@ build/
 
 # 個人的な文書（公開しない）
 docs/60-invitation.html
+# 実在の個人とのやりとりに関する手元メモ。公開しない
+docs/45-maisan-offkai.html
 node_modules/
 
 # ブローカーの実データ（例ファイルは追跡する）
