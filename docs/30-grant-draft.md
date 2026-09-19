@@ -119,7 +119,12 @@ a 100 XRP claim against a 10 XRP cap and is rejected by the ledger, a payment to
 unapproved address is structurally impossible because no channel exists to it, and the
 owner closes a budget. Loss to the owner's account: 0 XRP.
 
-**Not yet built:** mainnet deployment, framework adapters, hosted dashboard.
+**Also shipped:** a read-only owner dashboard (`leash dashboard` / `leash snapshot`) that
+shows every open budget, what is left in it, and — separately — **which layer enforces each
+limit**: the ledger or the broker's software. It holds no keys, exposes no write path
+(`GET` only), binds to `127.0.0.1`, and validates the `Host` header against DNS rebinding.
+
+**Not yet built:** mainnet deployment, framework adapters, a hosted (multi-tenant) dashboard.
 
 ## Success metrics (on-chain)
 

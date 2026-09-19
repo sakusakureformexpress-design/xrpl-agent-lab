@@ -9,6 +9,8 @@
 import fs from 'node:fs';
 import { Wallet } from 'xrpl';
 import { LeashOwner } from '../src/leash/index.js';
+import { start } from '../src/dashboard/server.js';
+import { snapshotHtml } from '../src/dashboard/snapshot.js';
 
 const [cmd, ...rest] = process.argv.slice(2);
 /** `--key value` と `--flag` を取り違えずに読む。 */
@@ -28,6 +30,15 @@ function ownerOrDie() {
     process.exit(1);
   }
   return new LeashOwner(Wallet.fromSeed(seed));
+}
+
+/** 公開アドレスだけを解決する。シードは要求しない。 */
+function addressOrDie() {
+  if (args.address) return String(args.address);
+  const seed = process.env.LEASH_OWNER_SEED;
+  if (seed) return Wallet.fromSeed(seed).address;
+  console.error('--address <アドレス> を指定してください（LEASH_OWNER_SEED からも解決できます）。');
+  process.exit(1);
 }
 
 const commands = {
@@ -94,6 +105,38 @@ const commands = {
     const r = await owner.revoke(args.channel);
     console.log(`閉鎖: ${r.result}　tx ${r.txHash}`);
   },
+
+  /**
+   * 読み取り専用のダッシュボード。
+   * **シードを要求しない。** 公開アドレスだけで動く（鍵を持たせない設計のため）。
+   */
+  async dashboard() {
+    const ownerAddress = addressOrDie();
+    const { url } = await start({
+      ownerAddress,
+      policyPath: args.policy,
+      statePath: args.state,
+      port: args.port ? Number(args.port) : 7788,
+    });
+    console.log(`ダッシュボード: ${url}`);
+    console.log('  読み取り専用です。予算枠を閉じる操作は revoke コマンドに残しています。');
+    console.log('  127.0.0.1 にのみ待ち受けています。認証は持たないため外部へ公開しないでください。');
+    console.log('\n  Ctrl+C で終了');
+  },
+
+  /** その時点の状態を 1 枚の HTML に保存する。共有・提出用。 */
+  async snapshot() {
+    const ownerAddress = addressOrDie();
+    const out = args.out ?? 'leash-dashboard.html';
+    const { html, data } = await snapshotHtml({
+      ownerAddress, policyPath: args.policy, statePath: args.state,
+    });
+    fs.writeFileSync(out, html);
+    console.log(`保存しました: ${out}`);
+    console.log(`  予算枠 ${data.budgets.length} 件・記録 ${data.activity.length} 件`);
+    console.log(`  エージェント側が動かせる上限の合計: ${data.totals.reachableXrp} XRP`);
+    for (const w of data.warnings) console.log(`  ⚠ ${w}`);
+  },
 };
 
 if (!cmd || !commands[cmd]) {
@@ -104,6 +147,10 @@ if (!cmd || !commands[cmd]) {
         --agent-pubkey <hex> [--expires <秒>]
   list  [--address <addr>]              予算枠と消化状況を見る
   revoke --channel <id>                 予算枠を閉じる
+  dashboard [--address <addr>]          読み取り専用のダッシュボードを開く
+            [--policy <path>] [--state <path>] [--port 7788]
+  snapshot  [--address <addr>] [--out <path>]
+            [--policy <path>]           現状を1枚の HTML に保存する
 
 環境変数
   LEASH_OWNER_SEED   予算の持ち主のシード（grant / revoke に必要）
