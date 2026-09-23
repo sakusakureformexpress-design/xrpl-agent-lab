@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+*.seed
+*.key
+secrets/
+node_modules/
+__pycache__/
+.venv/
+dist/
+build/
+.DS_Store
+
+
+# ブローカーの実データ（例ファイルは追跡する）
+leash.policy.json
+*.policy.json
+!leash.policy.example.json
+.leash-state.json
+*-state.json
+

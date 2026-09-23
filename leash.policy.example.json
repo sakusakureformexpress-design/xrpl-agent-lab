@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "brokerAccount": "rBrokerAccountAddressHere",
+  "network": "testnet",
+
+  "agents": {
+    "research-bot": {
+      "limits": {
+        "perPaymentMaxDrops": "100000",
+        "dailyTotalMaxDrops": "5000000",
+        "newPayeesPerDay": 3
+      },
+      "payees": {
+        "alwaysAllow": [],
+        "denyList": [],
+        "autoApprove": true,
+
+        "domains": {
+          "allowed": ["api-a.example.com", "api-b.example.com"],
+          "requireVerified": true,
+          "unverifiedMaxDrops": "1000"
+        }
+      }
+    }
+  }
+}
