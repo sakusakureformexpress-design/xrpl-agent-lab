@@ -16,7 +16,16 @@ import { LEASH_SOURCE_TAG, TF_CLOSE } from './constants.js';
 export class LeashOwner {
   /** @param {import('xrpl').Wallet} wallet 予算の持ち主のウォレット */
   constructor(wallet) {
-    this.wallet = wallet;
+    // 列挙不可にする。口座の鍵（seed / privateKey）が JSON.stringify やログに乗らないようにするため
+    // （セキュリティレビュー HIGH-5）。
+    Object.defineProperty(this, 'wallet', {
+      value: wallet, enumerable: false, writable: false, configurable: false,
+    });
+  }
+
+  /** シリアライズされても鍵を出さない。 */
+  toJSON() {
+    return { address: this.address };
   }
 
   get address() {
@@ -28,7 +37,7 @@ export class LeashOwner {
    *
    * 支払先(payee)は台帳に固定され、以後変更する取引型が存在しない。
    * 上限(capXrp)は `PaymentChannelFund` で**増額できるが、それができるのは
-   * チャネルの送金元（＝この口座）だけ**であり、口座の鍵が要る。
+   * チャネルの送金元（＝この口座。XLS-75 有効後は、明示的に委譲した口座も）だけ**である。
    * エージェントは署名鍵しか持たないため、上限を動かせない。
    * エージェントには agentPublicKey に対応する秘密鍵しか渡らないため、
    * 上限超過も支払先の変更も構造上できない。
@@ -79,6 +88,9 @@ export class LeashOwner {
         channelId: c.channel_id,
         payee: c.destination_account,
         publicKey: c.public_key_hex,
+        // drops の元の文字列も返す。XRP 換算の値は Number なので、金額計算にはこちらを使う
+        capDrops: c.amount,
+        spentDrops: c.balance,
         capXrp: dropsToXrp(c.amount),
         spentXrp: dropsToXrp(c.balance),
         remainingXrp: dropsToXrp((cap - spent).toString()),

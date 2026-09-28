@@ -6,7 +6,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { verifyPaymentChannelClaim } from 'xrpl';
+import { Wallet } from 'xrpl';
 import { LeashAgent } from '../src/leash/agent.js';
+import { LeashOwner } from '../src/leash/owner.js';
 import { LEASH_SOURCE_TAG } from '../src/leash/constants.js';
 
 /** 署名は台帳の状態に依存しないので、チャネルIDは固定の 64 桁 hex でよい。 */
@@ -134,13 +136,39 @@ test('LEASH_SOURCE_TAG は uint32 の範囲に収まる整数', () => {
   assert.ok(LEASH_SOURCE_TAG <= 4294967295, 'SourceTag が uint32 の上限を超えている');
 });
 
-// !!! 既知の不具合を記録するテスト（意図的に失敗させたまま残している）!!!
-// src/leash/constants.js:2 は `1279414611; // 0x4C454153 = "LEAS"` と書かれているが、
-// 1279414611 は 0x4C425153（ASCII "LBQS"）であり、0x4C454153 は 1279607123。
-// 十進リテラルと注釈が食い違っている。README が謳う「台帳から採用状況を集計できる」
-// タグの値そのものなので、どちらが正なのかを決めて直す必要がある。
+// 値と注釈の一致を固定する回帰テスト。
+// 初期実装は 1279414611（= 0x4C425153 = "LBQS"）に「"LEAS"」と注釈していた（ADR 0005）。
+// 正しくは 0x4C454153 = 1279607123。同じ食い違いが戻らないようにする。
 test('LEASH_SOURCE_TAG は ASCII "LEAS" に対応する', () => {
   assert.equal(LEASH_SOURCE_TAG, 0x4c454153);
   const hex = LEASH_SOURCE_TAG.toString(16).toUpperCase();
   assert.equal(Buffer.from(hex, 'hex').toString('ascii'), 'LEAS');
+});
+
+// --- 鍵がシリアライズに乗らないこと（セキュリティレビュー HIGH-5 の回帰テスト） ---
+
+test('LeashOwner を JSON にしても口座の seed・秘密鍵が出ない', () => {
+  const w = Wallet.generate();
+  const owner = new LeashOwner(w);
+  const json = JSON.stringify(owner);
+  assert.ok(!json.includes(w.seed), 'seed が JSON に出ている');
+  assert.ok(!json.includes(w.privateKey), '秘密鍵が JSON に出ている');
+  assert.deepEqual(JSON.parse(json), { address: w.address });
+  assert.deepEqual(Object.keys(owner), [], '列挙できるプロパティに鍵が残っている');
+  assert.equal(owner.address, w.address, '内部では使える');
+});
+
+test('LeashAgent を JSON にしても秘密鍵が出ない', () => {
+  const agent = LeashAgent.create();
+  const json = JSON.stringify(agent);
+  assert.ok(!json.includes(agent.privateKey), '秘密鍵が JSON に出ている');
+  assert.deepEqual(JSON.parse(json), { publicKey: agent.publicKey });
+  assert.ok(!Object.keys(agent).includes('privateKey'));
+});
+
+test('LeashAgent の秘密鍵は後から書き換えられない', () => {
+  const agent = LeashAgent.create();
+  const before = agent.privateKey;
+  assert.throws(() => { 'use strict'; agent.privateKey = 'x'; }, TypeError);
+  assert.equal(agent.privateKey, before);
 });

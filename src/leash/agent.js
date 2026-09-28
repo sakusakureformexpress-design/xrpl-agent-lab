@@ -16,8 +16,17 @@ export class LeashAgent {
    * @param {string} p.publicKey  対応する公開鍵
    */
   constructor({ privateKey, publicKey }) {
-    this.privateKey = privateKey;
+    // 列挙不可にする。JSON.stringify・ログ・エラーのダンプに秘密鍵が乗らないようにするため
+    // （ブローカーの wallet と同じ扱い。セキュリティレビュー HIGH-5）。
+    Object.defineProperty(this, 'privateKey', {
+      value: privateKey, enumerable: false, writable: false, configurable: false,
+    });
     this.publicKey = publicKey;
+  }
+
+  /** シリアライズされても秘密鍵を出さない。 */
+  toJSON() {
+    return { publicKey: this.publicKey };
   }
 
   /** 新しいエージェント用の鍵ペアを作る。 */

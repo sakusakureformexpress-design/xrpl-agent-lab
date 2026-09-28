@@ -110,21 +110,27 @@ MCP サーバを同梱している。Claude Code / Claude Desktop / Cursor な�
 | `authorize_payment` | 支払いの伝票に署名する。枠が無い相手・上限超過は断る |
 | `budget_status` | 特定の支払先の消化状況 |
 
-実際に MCP 越しに叩いた結果:
+実際に MCP 越しに叩いた結果（testnet、2026-09-28）:
 
 ```
 ■ authorize_payment  2 XRP → 承認済みの支払先
-   Authorized 2 XRP. Remaining after redemption: 8 XRP
+   Authorized 2 XRP to rEKvcdJ2t8pgEELuiCmgskRjxK23mXa1n1.
+   Cumulative authorized on this channel: 2 / 10 XRP
+   Remaining: 8 XRP
    エラー扱い: いいえ
 
 ■ authorize_payment  100 XRP → 上限超過
-   Refused: 100 XRP exceeds the 10 XRP left in this budget.
+   Refused: this would bring the total drawn to 102 XRP, above the 10 XRP cap
+   (2 XRP already authorized but not yet redeemed). The ledger would reject it with tecUNFUNDED_PAYMENT.
    エラー扱い: はい ✓
 
 ■ authorize_payment  1 XRP → 未承認の攻撃者
-   No budget exists for that address — there is no payment channel to sign against.
+   No budget exists for rHcJyPZ74Cj2GVzTqBQcioni3FySxmpq7p. This agent cannot pay that address —
+   there is no payment channel to sign against. Ask the treasury owner to open one.
    エラー扱い: はい ✓
 ```
+
+金額の計算は整数（drops）で行い、浮動小数点を通さない（`src/mcp/amounts.js`）。
 
 再現: `node src/verify/04-mcp.js`
 
@@ -163,7 +169,7 @@ LEASH_OWNER_SEED=s... node bin/leash.js revoke --channel <id>
 node bin/leash.js dashboard --address rOwner... \
   --policy leash.policy.json --state .leash-state.json
 
-# その時点の状態を1枚の HTML に保存する（共有・提出用）
+# その時点の状態を1枚の HTML に保存する（共有用）
 node bin/leash.js snapshot --address rOwner... --out leash-dashboard.html
 ```
 
@@ -231,6 +237,7 @@ RLUSD が現時点で使えないのは技術的制約ではなく、
 | `research/` | 調査記録（出典URL付き） |
 | `demo/*.html` | 説明ページ各種。**手元のブラウザで開く**（GitHub 上では生ソースに見える） |
 | `demo/explainer.html` | 仕組みの説明ページ（触って動かせる） |
+| `demo/kids.html` | 予備知識なしで読める、いちばんやさしい説明 |
 | `demo/replay.html` | 実行記録の自動再生（字幕付き。録画してデモ動画に使える） |
 | `demo/run-demo.js` | 録画用の英語デモ（実機で走らせる版） |
 
@@ -242,9 +249,11 @@ RLUSD が現時点で使えないのは技術的制約ではなく、
 | `src/verify/02-token-cap.js` | ドル建てトークンで上限を強制できるか |
 | `src/verify/03-e2e.js` | 通しの動作（予算付与→利用→乗っ取り→防御→閉鎖） |
 | `src/verify/04-mcp.js` | MCP サーバがプロトコル越しに正しく動くか |
+| `src/verify/05-x402.js` | x402 の流れにブローカー経由で乗れるか |
 
 ```bash
 npm install
+npm test                    # 140 件。ネットワークに出ない
 node src/verify/03-e2e.js   # テストネットのため実際の資金は動かない
 ```
 

@@ -61,7 +61,7 @@ Requires Node.js 20+.
 
 ```bash
 npm install
-npm test                      # 129 tests, no network
+npm test                      # 140 tests, no network
 node src/verify/01-channel-cap.js   # over-cap claim rejected on testnet
 node src/verify/03-e2e.js           # end-to-end on testnet
 ```

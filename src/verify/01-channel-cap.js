@@ -48,8 +48,8 @@ async function main() {
   const createTx = await autofill({
     TransactionType: 'PaymentChannelCreate',
     Account: human.address,
-    Destination: vendor.address,          // ← 支払先。以後변更不可
-    Amount: xrpToDrops(CHANNEL_CAP_XRP),  // ← 上限。増額できるのは送金元だけ
+    Destination: vendor.address,          // ← 支払先。以後変更不可
+    Amount: xrpToDrops(CHANNEL_CAP_XRP),  // ← 上限。増額できるのは送金元（または送金元が委譲した口座）だけ
     SettleDelay: 60,
     PublicKey: agent.publicKey,           // ← エージェントの公開鍵を登録
   });

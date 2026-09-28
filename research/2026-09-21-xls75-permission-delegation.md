@@ -21,9 +21,9 @@
 | 正式名 | Permission Delegation |
 | ステータス | **Final** |
 | Amendment 名 | `PermissionDelegationV1_1`（旧 `PermissionDelegation` は Obsolete） |
-| 著者 | Mayukha Vadari / Yinyi Qian / Ed Hennis（いずれも Ripple） |
+| 著者 | Ripple のエンジニア（仕様書を参照） |
 | 作成 | 2024-08-21 |
-| **有効化** | **2026-09-21 11:18:40 UTC に過半数到達。支持が維持されれば最速 2026-10-05 11:18:40 UTC**（メインネット2ノードの `feature` RPC で確認。2026-09-23） |
+| **有効化** | **2026-09-24 21:25:01 UTC に過半数を取り直した。支持が維持されれば最速 2026-10-08 21:25:01 UTC**（メインネット2ノードの `feature` RPC で確認。2026-09-28。09-21 に一度到達したが途切れている） |
 
 つまり**まだメインネットで使えない。支持が維持されれば来月から使えるようになる。**
 
@@ -161,7 +161,7 @@ XLS-75 なら鍵なしで閉じられるのでは、と考えた。
 
 ## 5. 未確認のこと
 
-- **[要確認]** testnet で `PermissionDelegationV1_1` が既に有効か。メインネットは最速 10-05
+- **[要確認]** testnet で `PermissionDelegationV1_1` が既に有効か。メインネットは支持が維持されれば最速 10-08
 - **[解決]** 手数料は**委譲先**が払う（XLS-75 L185: "The delegate will pay the fees on the transaction, to prevent a delegate from draining an account's XRP via fees. Only the `Account`'s sequence number is incremented"）。`Delegate` オブジェクトの reserve は `Account` 持ち（§3.4）
 - **[要確認]** 委譲先が出した `PaymentChannelFund` の `Expiration` 変更可否。仕様上は送金元として振る舞うので変えられるはずだが未検証
 - **[要確認]** `PermissionDelegation`（旧版）で見つかった「critical bug」の内容。V1_1 で何が直ったのか一次ソースを読めていない
@@ -173,8 +173,8 @@ XLS-75 なら鍵なしで閉じられるのでは、と考えた。
 ### Q1. 補充の委譲（§4.1）は入れる価値があるか
 
 「宛先は固定・金額は無制限」という中途半端な縛りを、運用上の利便のために入れるべきか。
-**個人的には入れない方に傾いている**（攻撃面が増えるわりに、守れるものが増えない）が、
-実運用の感覚が無いので判断がつかない。
+**入れない方に傾いている**（攻撃面が増えるわりに、守れるものが増えない）。
+運用する側の視点での意見がほしい。
 
 ### Q2. `SettleDelay` の既定値 3600 秒は妥当か
 
@@ -207,7 +207,7 @@ XLS-74 §4.4 は「granular permission は今後も追加しうる」と明記�
 
 事実を並べるとこうなる:
 
-> Ripple は「支払いの権限を委譲する仕組み」を Final にし、**支持が維持されれば最速 2026-10-05 に本番で有効化される。**
+> 「支払いの権限を委譲する仕組み」は Final で、**支持が維持されれば最速 2026-10-08 に本番で有効化される。**
 > しかし「委譲した権限を金額で縛る仕組み」は用意していない。
 > **仕様書自身が "can potentially access funds" と警告している。**
 
@@ -225,4 +225,4 @@ XLS-74 §4.4 は「granular permission は今後も追加しうる」と明記�
 | `DelegateSet` の仕様 | https://xrpl.org/docs/references/protocol/transactions/types/delegateset | 一次 |
 | `tfClose` の挙動（送金元は `SettleDelay` 後・受取人は即時） | https://xrpl.org/docs/references/protocol/transactions/types/paymentchannelclaim | **一次** |
 | XLS 一覧とステータス | https://xls.xrpl.org/ | 一次 |
-| `PermissionDelegationV1_1` の活性化状況（過半数到達 2026-09-21 11:18:40 UTC → 最速 10-05） | メインネット `feature` RPC（xrplcluster.com / xrpl.ws、`majority` = 843304720） | **一次（台帳そのもの）** |
+| `PermissionDelegationV1_1` の活性化状況（過半数 2026-09-24 21:25:01 UTC → 最速 10-08） | メインネット `feature` RPC（xrplcluster.com / xrpl.ws、`majority` = 843600301。09-21 時点は 843304720） | **一次（台帳そのもの）** |

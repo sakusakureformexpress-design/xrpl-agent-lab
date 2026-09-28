@@ -41,6 +41,27 @@ function addressOrDie() {
   process.exit(1);
 }
 
+/**
+ * 秒数を厳密に読む。`--expires` の値の付け忘れ（true）や `1d` のような表記を
+ * Number() に通すと 1 秒や NaN（＝無期限）になり、意図しない枠ができる。
+ */
+function parseSeconds(v) {
+  if (typeof v !== 'string' || !/^[1-9]\d*$/.test(v)) {
+    console.error(`--expires には正の整数（秒）を指定してください: ${v === true ? '（値がありません）' : v}`);
+    process.exit(1);
+  }
+  return Number(v);
+}
+
+/** XRP の金額を厳密に読む（小数6桁まで）。 */
+function checkXrp(name, v) {
+  if (typeof v !== 'string' || !/^(0|[1-9]\d*)(\.\d{1,6})?$/.test(v) || Number(v) <= 0) {
+    console.error(`--${name} には正の XRP 額（小数6桁まで）を指定してください: ${v === true ? '（値がありません）' : v}`);
+    process.exit(1);
+  }
+  return v;
+}
+
 const commands = {
   async 'new-agent'() {
     const w = Wallet.generate();
@@ -64,12 +85,12 @@ const commands = {
       console.error('使い方: grant --payee <address> --cap <XRP> --agent-pubkey <hex> [--expires <秒>]');
       process.exit(1);
     }
+    // 入力の誤りは、鍵を読む前に弾く
+    const capXrp = checkXrp('cap', cap);
+    const expiresInSec = expires === undefined ? undefined : parseSeconds(expires);
     const owner = ownerOrDie();
-    console.log(`${payee} に ${cap} XRP の予算枠を作成中…`);
-    const b = await owner.grantBudget({
-      payee, capXrp: String(cap), agentPublicKey: pub,
-      expiresInSec: expires ? Number(expires) : undefined,
-    });
+    console.log(`${payee} に ${capXrp} XRP の予算枠を作成中…`);
+    const b = await owner.grantBudget({ payee, capXrp, agentPublicKey: pub, expiresInSec });
     console.log(`\n  作成しました`);
     console.log(`  channel : ${b.channelId}`);
     console.log(`  上限    : ${b.capXrp} XRP（増額できるのはあなただけ）`);
@@ -125,7 +146,7 @@ const commands = {
     console.log('\n  Ctrl+C で終了');
   },
 
-  /** その時点の状態を 1 枚の HTML に保存する。共有・提出用。 */
+  /** その時点の状態を 1 枚の HTML に保存する。共有用。 */
   async snapshot() {
     const ownerAddress = addressOrDie();
     const out = args.out ?? 'leash-dashboard.html';
